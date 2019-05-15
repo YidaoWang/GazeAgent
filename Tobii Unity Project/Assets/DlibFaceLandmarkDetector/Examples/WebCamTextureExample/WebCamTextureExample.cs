@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DlibFaceLandmarkDetector.UnityUtils;
 using DlibFaceLandmarkDetector;
+using UnityEngine.Networking;
 
 namespace DlibFaceLandmarkDetectorExample
 {
@@ -13,7 +14,7 @@ namespace DlibFaceLandmarkDetectorExample
     /// WebCamTexture Example
     /// An example of detecting face landmarks in WebCamTexture images.
     /// </summary>
-    public class WebCamTextureExample : MonoBehaviour
+    public class WebCamTextureExample : NetworkBehaviour
     {
         /// <summary>
         /// Set the name of the device to use.
@@ -25,13 +26,13 @@ namespace DlibFaceLandmarkDetectorExample
         /// Set the width of WebCamTexture.
         /// </summary>
         [SerializeField, TooltipAttribute("Set the width of WebCamTexture.")]
-        public int requestedWidth = 320;
+        public int requestedWidth = 640;
 
         /// <summary>
         /// Set the height of WebCamTexture.
         /// </summary>
         [SerializeField, TooltipAttribute("Set the height of WebCamTexture.")]
-        public int requestedHeight = 240;
+        public int requestedHeight = 480;
 
         /// <summary>
         /// Set FPS of WebCamTexture.
@@ -386,6 +387,11 @@ namespace DlibFaceLandmarkDetectorExample
         // Update is called once per frame
         void Update()
         {
+            print(netId.Value + isLocalPlayer.ToString());
+            // 他人のプレイヤーに対しては何も行わない
+            if (isLocalPlayer)
+                return;
+        
             if (adjustPixelsDirection)
             {
                 // Catch the orientation change of the screen.
@@ -400,15 +406,13 @@ namespace DlibFaceLandmarkDetectorExample
                 }
             }
 
-
+            print(hasInitDone.ToString() + webCamTexture.isPlaying.ToString() + webCamTexture.didUpdateThisFrame.ToString());
             if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
             {
-
                 Color32[] colors = GetColors();
 
                 if (colors != null)
                 {
-
                     faceLandmarkDetector.SetImage<Color32>(colors, texture.width, texture.height, 4, true);
 
                     //detect face rects
@@ -435,11 +439,35 @@ namespace DlibFaceLandmarkDetectorExample
                         //adjust face landmark
                         var adjusted = AdjustRect(res, texture.width, texture.height, rect);
 
-                        texture.SetPixels32(adjusted);
-                        texture.Apply(false);
+                        print("CmdDsp");
+                        CmdDisplayAgent(netId, adjusted);
+
+                        //texture.SetPixels32(adjusted);
+                        //texture.Apply(false);
                     }
                 }
             }
+        }
+
+        [Command]
+        void CmdDisplayAgent(NetworkInstanceId id, Color32[] agent)
+        {
+            switch (id.Value)
+            {
+                case 1:
+                    RpcDisplayAgent(new NetworkInstanceId(2), agent);
+                    break;
+                case 2:
+                    RpcDisplayAgent(new NetworkInstanceId(1), agent);
+                    break;
+            }
+        }
+
+        [ClientRpc]
+        void RpcDisplayAgent(NetworkInstanceId id, Color32[] agent)
+        {
+            texture.SetPixels32(agent);
+            texture.Apply(false);
         }
 
         private Color32[] AdjustRect(Color32[] colors, int width, int height, Rect rect)
