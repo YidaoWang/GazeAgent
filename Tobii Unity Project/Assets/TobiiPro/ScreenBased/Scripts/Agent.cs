@@ -6,7 +6,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DlibFaceLandmarkDetector.UnityUtils;
 using DlibFaceLandmarkDetector;
-using UnityEngine.Networking;
 
 namespace DlibFaceLandmarkDetectorExample
 {
@@ -14,7 +13,7 @@ namespace DlibFaceLandmarkDetectorExample
     /// WebCamTexture Example
     /// An example of detecting face landmarks in WebCamTexture images.
     /// </summary>
-    public class WebCamTextureExample : NetworkBehaviour
+    public class Agent : MonoBehaviour
     {
         /// <summary>
         /// Set the name of the device to use.
@@ -56,6 +55,9 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         [SerializeField, TooltipAttribute("Determines if adjust pixels direction.")]
         public bool adjustPixelsDirection = true;
+
+        public delegate void UpdateAgentEventHandler();
+        public event UpdateAgentEventHandler OnUpdateAgent;
 
         /// <summary>
         /// The webcam texture.
@@ -164,8 +166,7 @@ namespace DlibFaceLandmarkDetectorExample
             {
                 Debug.LogError("shape predictor file does not exist. Please copy from “DlibFaceLandmarkDetector/StreamingAssets/” to “Assets/StreamingAssets/” folder. ");
             }
-
-            print("Run" + netId);
+            
             faceLandmarkDetector = new FaceLandmarkDetector(dlibShapePredictorFilePath);
 
             Initialize();
@@ -439,7 +440,7 @@ namespace DlibFaceLandmarkDetectorExample
                         //adjust face landmark
                         var adjusted = AdjustRect(res, texture.width, texture.height, rect);
 
-                        CmdDisplayAgent(netId, adjusted);
+                        OnUpdateAgent?.Invoke();
 
                         texture.SetPixels32(adjusted);
                         texture.Apply(false);
@@ -448,28 +449,7 @@ namespace DlibFaceLandmarkDetectorExample
             }
         }
 
-        [Command]
-        void CmdDisplayAgent(NetworkInstanceId id, Color32[] agent)
-        {
-            print("CmdDsp");
-            print("NetId:" + id.Value);
-            //switch (id.Value)
-            //{
-            //    case 1:
-            //        RpcDisplayAgent(new NetworkInstanceId(2), agent);
-            //        break;
-            //    case 2:
-            //        RpcDisplayAgent(new NetworkInstanceId(1), agent);
-            //        break;
-            //}
-        }
-
-        [ClientRpc]
-        void RpcDisplayAgent(NetworkInstanceId id, Color32[] agent)
-        {
-            texture.SetPixels32(agent);
-            texture.Apply(false);
-        }
+    
 
         private Color32[] AdjustRect(Color32[] colors, int width, int height, Rect rect)
         {
