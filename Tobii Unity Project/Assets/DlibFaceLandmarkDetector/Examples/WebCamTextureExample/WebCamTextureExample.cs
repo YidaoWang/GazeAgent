@@ -49,7 +49,7 @@ namespace DlibFaceLandmarkDetectorExample
         /// <summary>
         /// The adjust pixels direction toggle.
         /// </summary>
-        public Toggle adjustPixelsDirectionToggle;
+        //public Toggle adjustPixelsDirectionToggle;
 
         /// <summary>
         /// Determines if adjust pixels direction.
@@ -141,7 +141,7 @@ namespace DlibFaceLandmarkDetectorExample
         {
             fpsMonitor = GetComponent<FpsMonitor>();
 
-            adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
+            //adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
 
             dlibShapePredictorFileName = DlibFaceLandmarkDetectorExample.dlibShapePredictorFileName;
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -165,6 +165,7 @@ namespace DlibFaceLandmarkDetectorExample
                 Debug.LogError("shape predictor file does not exist. Please copy from “DlibFaceLandmarkDetector/StreamingAssets/” to “Assets/StreamingAssets/” folder. ");
             }
 
+            print("Run" + netId);
             faceLandmarkDetector = new FaceLandmarkDetector(dlibShapePredictorFilePath);
 
             Initialize();
@@ -356,7 +357,6 @@ namespace DlibFaceLandmarkDetectorExample
 
             gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
-
             gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
             Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
 
@@ -387,10 +387,10 @@ namespace DlibFaceLandmarkDetectorExample
         // Update is called once per frame
         void Update()
         {
-            print(netId.Value + isLocalPlayer.ToString());
+            //print(netId.Value + isLocalPlayer.ToString());
             // 他人のプレイヤーに対しては何も行わない
-            if (isLocalPlayer)
-                return;
+            //if (!isLocalPlayer)
+                //return;
         
             if (adjustPixelsDirection)
             {
@@ -406,7 +406,7 @@ namespace DlibFaceLandmarkDetectorExample
                 }
             }
 
-            print(hasInitDone.ToString() + webCamTexture.isPlaying.ToString() + webCamTexture.didUpdateThisFrame.ToString());
+            //print(hasInitDone.ToString() + webCamTexture.isPlaying.ToString() + webCamTexture.didUpdateThisFrame.ToString());
             if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
             {
                 Color32[] colors = GetColors();
@@ -439,11 +439,10 @@ namespace DlibFaceLandmarkDetectorExample
                         //adjust face landmark
                         var adjusted = AdjustRect(res, texture.width, texture.height, rect);
 
-                        print("CmdDsp");
                         CmdDisplayAgent(netId, adjusted);
 
-                        //texture.SetPixels32(adjusted);
-                        //texture.Apply(false);
+                        texture.SetPixels32(adjusted);
+                        texture.Apply(false);
                     }
                 }
             }
@@ -452,15 +451,17 @@ namespace DlibFaceLandmarkDetectorExample
         [Command]
         void CmdDisplayAgent(NetworkInstanceId id, Color32[] agent)
         {
-            switch (id.Value)
-            {
-                case 1:
-                    RpcDisplayAgent(new NetworkInstanceId(2), agent);
-                    break;
-                case 2:
-                    RpcDisplayAgent(new NetworkInstanceId(1), agent);
-                    break;
-            }
+            print("CmdDsp");
+            print("NetId:" + id.Value);
+            //switch (id.Value)
+            //{
+            //    case 1:
+            //        RpcDisplayAgent(new NetworkInstanceId(2), agent);
+            //        break;
+            //    case 2:
+            //        RpcDisplayAgent(new NetworkInstanceId(1), agent);
+            //        break;
+            //}
         }
 
         [ClientRpc]
@@ -555,14 +556,14 @@ namespace DlibFaceLandmarkDetectorExample
         /// <summary>
         /// Raises the adjust pixels direction toggle value changed event.
         /// </summary>
-        public void OnAdjustPixelsDirectionToggleValueChanged()
-        {
-            if (adjustPixelsDirectionToggle.isOn != adjustPixelsDirection)
-            {
-                adjustPixelsDirection = adjustPixelsDirectionToggle.isOn;
-                Initialize();
-            }
-        }
+        //public void OnAdjustPixelsDirectionToggleValueChanged()
+        //{
+        //    if (adjustPixelsDirectionToggle.isOn != adjustPixelsDirection)
+        //    {
+        //        adjustPixelsDirection = adjustPixelsDirectionToggle.isOn;
+        //        Initialize();
+        //    }
+        //}
 
         /// <summary>
         /// Flips the colors.
