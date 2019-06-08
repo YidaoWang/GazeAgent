@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using DlibFaceLandmarkDetector.UnityUtils;
 using DlibFaceLandmarkDetector;
+using Tobii.Research.Unity;
 
 namespace DlibFaceLandmarkDetectorExample
 {
@@ -166,7 +167,7 @@ namespace DlibFaceLandmarkDetectorExample
             {
                 Debug.LogError("shape predictor file does not exist. Please copy from “DlibFaceLandmarkDetector/StreamingAssets/” to “Assets/StreamingAssets/” folder. ");
             }
-            
+
             faceLandmarkDetector = new FaceLandmarkDetector(dlibShapePredictorFilePath);
 
             Initialize();
@@ -388,11 +389,7 @@ namespace DlibFaceLandmarkDetectorExample
         // Update is called once per frame
         void Update()
         {
-            //print(netId.Value + isLocalPlayer.ToString());
-            // 他人のプレイヤーに対しては何も行わない
-            //if (!isLocalPlayer)
-                //return;
-        
+
             if (adjustPixelsDirection)
             {
                 // Catch the orientation change of the screen.
@@ -419,7 +416,7 @@ namespace DlibFaceLandmarkDetectorExample
                     //detect face rects
                     List<Rect> detectResult = faceLandmarkDetector.Detect();
 
-                    if(detectResult.Count > 0)
+                    if (detectResult.Count > 0)
                     {
                         var rect = detectResult[0];
                         var w = (int)rect.width;
@@ -430,28 +427,78 @@ namespace DlibFaceLandmarkDetectorExample
                         //detect landmark points
                         var vectors = faceLandmarkDetector.DetectLandmark(rect);
 
+                        //faceLandmarkDetector.DrawDetectLandmarkResult()
+
                         //draw landmark points
-                        faceLandmarkDetector.DrawDetectLandmarkResult<Color32>(res, texture.width, texture.height, 4, true, 0, 255, 0, 255);
+                        //faceLandmarkDetector.DrawDetectLandmarkResult<Color32>(res, texture.width, texture.height, 4, true, 0, 255, 0, 255);
 
                         //draw face rect
                         //faceLandmarkDetector.DrawDetectResult<Color32> (res, texture.width, texture.height, 4, true, 255, 0, 0, 255, 2);
 
-
                         //adjust face landmark
-                        var adjusted = AdjustRect(res, texture.width, texture.height, rect);
+                        //var adjusted = AdjustRect(res, texture.width, texture.height, rect);
 
-                        OnUpdateAgent?.Invoke();
+                        //OnUpdateAgent?.Invoke();
 
-                        texture.SetPixels32(adjusted);
+
+                        DrawAgent(res, texture.width, texture.height, rect, vectors, null);
+
+                        texture.SetPixels32(res);
                         texture.Apply(false);
                     }
                 }
             }
         }
 
-    
+        public void DrawAgent(Color32[] colors, int width, int height, Rect rect, List<Vector2> landmarkPoints, IGazeData gazeData)
+        {
+            int thickness = 3;
+            Color32 color = new Color32(0, 255, 0, 255);
 
-        private Color32[] AdjustRect(Color32[] colors, int width, int height, Rect rect)
+            for (int i = 0; i < landmarkPoints.Count; i++)
+            {
+                var pixels = GetPixels(landmarkPoints[i], thickness);
+                foreach (var p in pixels)
+                {
+                    var sn = PointToSequence(p, width, height, true);
+                    if (0 < sn && sn < colors.Length)
+                    {
+                        colors[sn] = color;
+                    }
+                }
+            }
+
+            AdjustRect(colors, width, height, rect);
+        }
+
+
+        private List<Vector2> GetPixels(Vector2 point, int thickness)
+        {
+            var list = new List<Vector2>();
+            for (int i = 0; i < thickness; i++)
+            {
+                for (int j = 0; j < thickness; j++)
+                {
+                    list.Add(point + new Vector2(i, j));
+                }
+            }
+            return list;
+        }
+
+        private int PointToSequence(Vector2 point, int width, int heigth, bool flip)
+        {
+            if (!flip)
+            {
+                return (int)point.x + width * (int)point.y;
+            }
+            else
+            {
+                return (int)point.x + width * (heigth - (int)point.y);
+            }
+        }
+
+
+        private void AdjustRect(Color32[] colors, int width, int height, Rect rect)
         {
             Color32[] res = new Color32[colors.Length];
 
@@ -459,14 +506,17 @@ namespace DlibFaceLandmarkDetectorExample
             int adjy = -(int)rect.yMin + height / 2 - (int)rect.height / 2;
 
             for (var i = 0; i < colors.Length; i++)
-            {    
-                int j = i + adjx - adjy*width;
+            {
+                int j = i + adjx - adjy * width;
                 if (j >= 0 && j < res.Length)
                 {
                     res[j] = colors[i];
                 }
             }
-            return res;
+            for (var i = 0; i < colors.Length; i++)
+            {
+                colors[i] = res[i];
+            }
         }
 
         /// <summary>

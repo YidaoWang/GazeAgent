@@ -17,7 +17,7 @@ namespace DlibFaceLandmarkDetector.UnityUtils
         */
         public static string getVersion ()
         {
-            return "1.2.7";
+            return "1.2.8";
         }
 
         /**
@@ -424,7 +424,7 @@ namespace DlibFaceLandmarkDetector.UnityUtils
         */
         public static void setDebugMode (bool debugMode, bool throwException = false)
         {
-            #if (UNITY_PRO_LICENSE || UNITY_5 || UNITY_5_3_OR_NEWER)
+            #if UNITY_5_3_OR_NEWER
             DlibFaceLandmarkDetector_SetDebugMode (debugMode);
 
             if (debugMode) {
@@ -439,7 +439,7 @@ namespace DlibFaceLandmarkDetector.UnityUtils
             #endif
         }
 
-        #if (UNITY_PRO_LICENSE || UNITY_5 || UNITY_5_3_OR_NEWER)
+        #if UNITY_5_3_OR_NEWER
 
         private delegate void DebugLogDelegate (string str);
 
@@ -467,7 +467,7 @@ namespace DlibFaceLandmarkDetector.UnityUtils
         #endif
 
         [DllImport (LIBNAME)]
-        private static extern void DlibFaceLandmarkDetector_SetDebugMode (bool flag);
+        private static extern void DlibFaceLandmarkDetector_SetDebugMode ([MarshalAs(UnmanagedType.U1)] bool flag);
 
         [DllImport (LIBNAME)]
         private static extern void DlibFaceLandmarkDetector_SetDebugLogFunc (DebugLogDelegate func);

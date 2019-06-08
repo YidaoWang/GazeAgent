@@ -265,7 +265,21 @@ namespace DlibFaceLandmarkDetector
                     null
                 }
             });
-            #endif
+#endif
+
+            //Lumin
+#if UNITY_2019_1_OR_NEWER
+            SetPlugins (GetPluginFilePaths (pluginsFolderPath + "/Lumin/libs/arm64-v8a"), null,
+                new Dictionary<BuildTarget, Dictionary<string, string>> () { {BuildTarget.Lumin,new Dictionary<string, string> () { {
+                                "CPU",
+                                "ARM64"
+                            }
+                        }
+                    }
+                });
+#else
+            SetPlugins(GetPluginFilePaths(pluginsFolderPath + "/Lumin/libs/arm64-v8a"), null, null);
+#endif
         }
 
         /// <summary>
@@ -344,7 +358,12 @@ namespace DlibFaceLandmarkDetector
                             }
                             
                         }
-                    } else {
+
+#if UNITY_2019_1_OR_NEWER
+                        pluginImporter.isPreloaded = true;
+#endif
+                    }
+                    else {
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.Android, false);
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.iOS, false);
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.StandaloneWindows, false);
@@ -361,9 +380,13 @@ namespace DlibFaceLandmarkDetector
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.StandaloneLinuxUniversal, false);
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.WSAPlayer, false);
                         pluginImporter.SetCompatibleWithPlatform (BuildTarget.WebGL, false);
+
+#if UNITY_2019_1_OR_NEWER
+                        pluginImporter.isPreloaded = false;
+#endif
                     }
-                    
-                    
+
+
                     pluginImporter.SaveAndReimport ();
                     
                     Debug.Log ("SetPluginImportSettings Success :" + item);

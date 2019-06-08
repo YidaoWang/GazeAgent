@@ -156,6 +156,8 @@ namespace DlibFaceLandmarkDetector
             #endif
         }
 
+#if !(PLATFORM_LUMIN && !UNITY_EDITOR)
+
         /**
         * Sets Image from WebCamTexture.
         * 
@@ -201,6 +203,8 @@ namespace DlibFaceLandmarkDetector
             return;
             #endif
         }
+
+#endif
 
         /**
         * Sets Image from IntPtr.
@@ -914,13 +918,15 @@ namespace DlibFaceLandmarkDetector
         private static extern void DlibFaceLandmarkDetector_Dispose (IntPtr nativeObj);
 
         [DllImport (LIBNAME)]
+        [return: MarshalAs(UnmanagedType.U1)]
         private static extern bool DlibFaceLandmarkDetector_LoadObjectDetector (IntPtr self, string objectDetectorFilename);
 
         [DllImport (LIBNAME)]
+        [return: MarshalAs(UnmanagedType.U1)]
         private static extern bool DlibFaceLandmarkDetector_LoadShapePredictor (IntPtr self, string shapePredictorFilename);
 
         [DllImport (LIBNAME)]
-        private static extern void DlibFaceLandmarkDetector_SetImage (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, bool flip);
+        private static extern void DlibFaceLandmarkDetector_SetImage (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, [MarshalAs(UnmanagedType.U1)] bool flip);
 
         [DllImport (LIBNAME)]
         private static extern int DlibFaceLandmarkDetector_Detect (IntPtr self, double adjust_threshold);
@@ -935,6 +941,7 @@ namespace DlibFaceLandmarkDetector
         private static extern void DlibFaceLandmarkDetector_GetDetectLandmarkResult (IntPtr self, double[] result);
 
         [DllImport (LIBNAME)]
+        [return: MarshalAs(UnmanagedType.U1)]
         private static extern bool DlibFaceLandmarkDetector_IsAllPartsInRect (IntPtr self);
 
         [DllImport (LIBNAME)]
@@ -944,10 +951,10 @@ namespace DlibFaceLandmarkDetector
         private static extern long DlibFaceLandmarkDetector_ShapePredictorNumFeatures (IntPtr self);
 
         [DllImport (LIBNAME)]
-        private static extern void DlibFaceLandmarkDetector_DrawDetectResult (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, bool flip, int r, int g, int b, int a, int thickness);
+        private static extern void DlibFaceLandmarkDetector_DrawDetectResult (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, [MarshalAs(UnmanagedType.U1)] bool flip, int r, int g, int b, int a, int thickness);
 
         [DllImport (LIBNAME)]
-        private static extern void DlibFaceLandmarkDetector_DrawDetectLandmarkResult (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, bool flip, int r, int g, int b, int a);
+        private static extern void DlibFaceLandmarkDetector_DrawDetectLandmarkResult (IntPtr self, IntPtr byteArray, int texWidth, int texHeight, int bytesPerPixel, [MarshalAs(UnmanagedType.U1)] bool flip, int r, int g, int b, int a);
     }
 }
 #pragma warning restore 0219
