@@ -135,6 +135,15 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         string dlibShapePredictorFilePath;
 
+        /// <summary>
+        /// The instance of eye tracker.
+        /// </summary>
+        EyeTracker eyeTracker;
+
+        private IGazeData lastGazePoint = new GazeData();
+
+        GameObject gazePlotter;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         IEnumerator getFilePath_Coroutine;
 #endif
@@ -143,6 +152,8 @@ namespace DlibFaceLandmarkDetectorExample
         void Start()
         {
             fpsMonitor = GetComponent<FpsMonitor>();
+            gazePlotter = GameObject.Find("[GazePlot]");
+            eyeTracker = EyeTracker.Instance;
 
             //adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
 
@@ -440,8 +451,23 @@ namespace DlibFaceLandmarkDetectorExample
 
                         //OnUpdateAgent?.Invoke();
 
+                        //var gazeData = eyeTracker.LatestGazeData;
+                        //Vector3 transform;
+                        //if (gazeData.CombinedGazeRayScreenValid && gazeData.TimeStamp > (lastGazePoint.TimeStamp + float.Epsilon))
+                        //{
+                        //    lastGazePoint = gazeData;
+                        //    transform = GazePlotter.ProjectToPlaneInWorld(gazeData);
+                        //}
+                        //else
+                        //{
+                        //    transform = GazePlotter.ProjectToPlaneInWorld(lastGazePoint);
+                        //}
 
-                        DrawAgent(res, texture.width, texture.height, rect, vectors, null);
+                        Vector2 gazePos = gazePlotter.transform.localPosition;
+                        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos);
+                        DrawAgent(res, texture.width, texture.height, rect, vectors,
+                            screenPos - (new Vector2(1024, 768) - new Vector2(texture.width, texture.height)) / 2);
+
 
                         texture.SetPixels32(res);
                         texture.Apply(false);
@@ -450,25 +476,82 @@ namespace DlibFaceLandmarkDetectorExample
             }
         }
 
-        public void DrawAgent(Color32[] colors, int width, int height, Rect rect, List<Vector2> landmarkPoints, IGazeData gazeData)
+        public void DrawAgent(Color32[] colors, int width, int height, Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
         {
             int thickness = 3;
-            Color32 color = new Color32(0, 255, 0, 255);
+            int pupil = 10;
+            Vector2 flipedGazePoint = new Vector2(gazePoint.x, height - gazePoint.y);
+            Color32 color = new Color32(0, 0, 0, 255);
 
-            for (int i = 0; i < landmarkPoints.Count; i++)
+            // ランドマークを中心へ移動
+            AdjustVectors(landmarkPoints, width, height, rect);
+
+            // ランドマーク点描
+            //for (int i = 0; i < landmarkPoints.Count; i++)
+            //{
+            //    var pixels = GetPixels(landmarkPoints[i], thickness);
+            //    foreach (var p in pixels)
+            //    {
+            //        var sn = PointToSequence(p, width, height, true);
+            //        if (0 < sn && sn < colors.Length)
+            //        {
+            //            colors[sn] = color;
+            //        }
+            //    }
+            //}
+
+            // 左目
+            var lr = (landmarkPoints[39] - landmarkPoints[36]).magnitude / 2;
+            var lcenter = landmarkPoints[36] + (landmarkPoints[39] - landmarkPoints[36]) / 2;
+
+            DrawCircle(colors, width, height, lcenter, lr + 5, color, true);
+
+
+            var ldel = (flipedGazePoint - lcenter) * (20.0f / 384);
+            DrawCircle(colors, width, height, lcenter + ldel, pupil, color, true, true);
+
+            // 右目
+            var rr = (landmarkPoints[42] - landmarkPoints[45]).magnitude / 2;
+            var rcenter = landmarkPoints[42] + (landmarkPoints[45] - landmarkPoints[42]) / 2;
+
+            DrawCircle(colors, width, height, rcenter, rr + 5, color, true);
+
+            var rdel = (flipedGazePoint - rcenter) * (20.0f / 384);
+            DrawCircle(colors, width, height, rcenter + rdel, pupil, color, true, true);
+
+
+            // 輪郭
+            for (var i = 0; i < 16; i++)
             {
-                var pixels = GetPixels(landmarkPoints[i], thickness);
-                foreach (var p in pixels)
-                {
-                    var sn = PointToSequence(p, width, height, true);
-                    if (0 < sn && sn < colors.Length)
-                    {
-                        colors[sn] = color;
-                    }
-                }
+                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
+            // 眉
+            //for (var i = 17; i < 26; i++)
+            //{
+            //    DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            //}
+            // 鼻
+            for (var i = 27; i < 35; i++)
+            {
+                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            }
+            DrawLine(colors, width, height, landmarkPoints[35], landmarkPoints[30], color);
 
-            AdjustRect(colors, width, height, rect);
+            // 口外形
+            for (var i = 48; i < 59; i++)
+            {
+                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            }
+            DrawLine(colors, width, height, landmarkPoints[59], landmarkPoints[48], color);
+
+            // 口内形
+            for (var i = 60; i < 67; i++)
+            {
+                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            }
+            DrawLine(colors, width, height, landmarkPoints[67], landmarkPoints[60], color);
+
+            //AdjustRect(colors, width, height, rect);
         }
 
 
@@ -497,6 +580,53 @@ namespace DlibFaceLandmarkDetectorExample
             }
         }
 
+        private void DrawLine(Color32[] coloes, int width, int heigth, Vector2 start, Vector2 end, Color32 color)
+        {
+            var vec = end - start;
+
+            var dx = Math.Max(Math.Abs(vec.x), Math.Abs(vec.y));
+            var dy = Math.Min(Math.Abs(vec.x), Math.Abs(vec.y));
+
+            for (var i = 0; i < dx; i++)
+            {
+                int s = PointToSequence(start + (vec * i / dx), width, heigth, true);
+                if (0 <= s && s < coloes.Length)
+                {
+                    coloes[s] = color;
+                }
+            }
+        }
+
+        private void DrawCircle(Color32[] colors, int width, int heigth, Vector2 center, float radius, Color32 color, bool flip, bool fill = false)
+        {
+            if (fill)
+            {
+                if (flip)
+                {
+                    center = new Vector2(center.x, heigth - center.y);
+                }
+                for (int i = PointToSequence(center - new Vector2(0, radius), width, heigth, false); i <= PointToSequence(center + new Vector2(0, radius), width, heigth, false); i++)
+                {
+                    float x = i % width - center.x;
+                    float y = i / width - center.y;
+                    if(x*x + y*y <= radius * radius)
+                    {
+                        colors[i] = color;
+                    }
+                }
+            }
+            else
+            {
+                for (var i = 0; i < 2 * Math.PI * radius; i++)
+                {
+                    int s = PointToSequence(center + new Vector2((float)Math.Sin(i / radius), (float)Math.Cos(i / radius)) * radius, width, heigth, flip);
+                    if (0 <= s && s < colors.Length)
+                    {
+                        colors[s] = color;
+                    }
+                }
+            }
+        }
 
         private void AdjustRect(Color32[] colors, int width, int height, Rect rect)
         {
@@ -518,6 +648,19 @@ namespace DlibFaceLandmarkDetectorExample
                 colors[i] = res[i];
             }
         }
+
+        private void AdjustVectors(List<Vector2> vectors, int width, int height, Rect rect)
+        {
+            int adjx = -(int)rect.xMin + width / 2 - (int)rect.width / 2;
+            int adjy = -(int)rect.yMin + height / 2 - (int)rect.height / 2;
+            var del = new Vector2(adjx, adjy);
+
+            for (var i = 0; i < vectors.Count; i++)
+            {
+                vectors[i] += del;
+            }
+        }
+
 
         /// <summary>
         /// Gets the current WebCameraTexture frame that converted to the correct direction.

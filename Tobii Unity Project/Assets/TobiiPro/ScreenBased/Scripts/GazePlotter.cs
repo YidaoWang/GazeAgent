@@ -7,6 +7,18 @@ namespace Tobii.Research.Unity
     [RequireComponent(typeof(SpriteRenderer))]
     public class GazePlotter : MonoBehaviour
     {
+        public static Vector3 ProjectToPlaneInWorld(IGazeData gazePoint)
+        {
+            Ray ray = gazePoint.CombinedGazeRayScreen;
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                Vector3 gazeOnScreen = hit.point;
+                return gazeOnScreen;
+            }
+            return Vector3.zero;
+        }
+
         [Range(3.0f, 15.0f), Tooltip("Number of gaze points in point cloud.")]
         public int PointCloudSize = 10;
         [Tooltip("Sprite to use for gaze points in the point cloud.")]
@@ -179,19 +191,6 @@ namespace Tobii.Research.Unity
         private int Next()
         {
             return ((_last + 1) % PointCloudSize);
-        }
-
-        private Vector3 ProjectToPlaneInWorld(IGazeData gazePoint)
-        {
-            var data = _eyeTracker.LatestGazeData;
-            Ray ray = data.CombinedGazeRayScreen;
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                Vector3 gazeOnScreen = hit.point;
-                return gazeOnScreen;
-            }
-            return Vector3.zero;
         }
 
         private Vector3 Smoothify(Vector3 point)
