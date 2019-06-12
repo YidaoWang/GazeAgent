@@ -466,7 +466,7 @@ namespace DlibFaceLandmarkDetectorExample
                         Vector2 gazePos = gazePlotter.transform.localPosition;
                         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos);
                         DrawAgent(res, texture.width, texture.height, rect, vectors,
-                            screenPos - (new Vector2(1024, 768) - new Vector2(texture.width, texture.height)) / 2);
+                            screenPos - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2);
 
 
                         texture.SetPixels32(res);
@@ -499,6 +499,7 @@ namespace DlibFaceLandmarkDetectorExample
             //        }
             //    }
             //}
+            //DrawCircle(colors, width, height, flipedGazePoint, 5, color, true);
 
             // 左目
             var lr = (landmarkPoints[39] - landmarkPoints[36]).magnitude / 2;
@@ -507,7 +508,8 @@ namespace DlibFaceLandmarkDetectorExample
             DrawCircle(colors, width, height, lcenter, lr + 5, color, true);
 
 
-            var ldel = (flipedGazePoint - lcenter) * (20.0f / 384);
+            var ldel = (flipedGazePoint - lcenter) * (20.0f / 320);
+            ldel = new Vector2(Math.Min(ldel.x, 20), Math.Min(ldel.y, 20));
             DrawCircle(colors, width, height, lcenter + ldel, pupil, color, true, true);
 
             // 右目
@@ -516,7 +518,8 @@ namespace DlibFaceLandmarkDetectorExample
 
             DrawCircle(colors, width, height, rcenter, rr + 5, color, true);
 
-            var rdel = (flipedGazePoint - rcenter) * (20.0f / 384);
+            var rdel = (flipedGazePoint - rcenter) * (20.0f / 320);
+            rdel = new Vector2(Math.Min(rdel.x, 20), Math.Min(rdel.y, 20));
             DrawCircle(colors, width, height, rcenter + rdel, pupil, color, true, true);
 
 
