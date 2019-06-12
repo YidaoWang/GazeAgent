@@ -57,7 +57,11 @@ namespace DlibFaceLandmarkDetectorExample
         [SerializeField, TooltipAttribute("Determines if adjust pixels direction.")]
         public bool adjustPixelsDirection = true;
 
-        public delegate void UpdateAgentEventHandler();
+
+        [SerializeField, TooltipAttribute("if it is remote setting.")]
+        public bool remoteFlag = false;
+
+        public delegate void UpdateAgentEventHandler(List<Vector2> landmarkPoints, Vector2 gazePoint);
         public event UpdateAgentEventHandler OnUpdateAgent;
 
         /// <summary>
@@ -143,6 +147,10 @@ namespace DlibFaceLandmarkDetectorExample
         private IGazeData lastGazePoint = new GazeData();
 
         GameObject gazePlotter;
+
+        Vector2 RemoteGazePoint = new Vector2();
+        List<Vector2> RemoteFaceLandmark = new List<Vector2>();
+
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         IEnumerator getFilePath_Coroutine;
@@ -464,11 +472,18 @@ namespace DlibFaceLandmarkDetectorExample
                         //}
 
                         Vector2 gazePos = gazePlotter.transform.localPosition;
-                        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos);
-                        DrawAgent(res, texture.width, texture.height, rect, vectors,
-                            screenPos - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2);
+                        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
+                            - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
 
-
+                        if (remoteFlag)
+                        {
+                            OnUpdateAgent?.Invoke(vectors, screenPos);
+                            DrawAgent(res, texture.width, texture.height, rect, RemoteFaceLandmark, RemoteGazePoint);
+                        }
+                        else
+                        {
+                            DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);
+                        }
                         texture.SetPixels32(res);
                         texture.Apply(false);
                     }
@@ -476,9 +491,16 @@ namespace DlibFaceLandmarkDetectorExample
             }
         }
 
+        internal void SetAgent(List<Vector2> landmarkPoints, Vector2 gazePoint)
+        {
+            RemoteFaceLandmark = landmarkPoints;
+            RemoteGazePoint = gazePoint;
+        }
+
         public void DrawAgent(Color32[] colors, int width, int height, Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
         {
-            int thickness = 3;
+            if (landmarkPoints.Count < 67) return;
+            //int thickness = 3;
             int pupil = 10;
             Vector2 flipedGazePoint = new Vector2(gazePoint.x, height - gazePoint.y);
             Color32 color = new Color32(0, 0, 0, 255);
@@ -509,7 +531,7 @@ namespace DlibFaceLandmarkDetectorExample
 
 
             var ldel = (flipedGazePoint - lcenter) * (20.0f / 320);
-            ldel = new Vector2(Math.Min(ldel.x, 20), Math.Min(ldel.y, 20));
+            //ldel = new Vector2(Math.Min(ldel.x, 20), Math.Min(ldel.y, 20));
             DrawCircle(colors, width, height, lcenter + ldel, pupil, color, true, true);
 
             // 右目
@@ -519,7 +541,7 @@ namespace DlibFaceLandmarkDetectorExample
             DrawCircle(colors, width, height, rcenter, rr + 5, color, true);
 
             var rdel = (flipedGazePoint - rcenter) * (20.0f / 320);
-            rdel = new Vector2(Math.Min(rdel.x, 20), Math.Min(rdel.y, 20));
+            //rdel = new Vector2(Math.Min(rdel.x, 20), Math.Min(rdel.y, 20));
             DrawCircle(colors, width, height, rcenter + rdel, pupil, color, true, true);
 
 
@@ -612,7 +634,7 @@ namespace DlibFaceLandmarkDetectorExample
                 {
                     float x = i % width - center.x;
                     float y = i / width - center.y;
-                    if(x*x + y*y <= radius * radius)
+                    if (x * x + y * y <= radius * radius)
                     {
                         colors[i] = color;
                     }
