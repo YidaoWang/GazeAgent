@@ -9,13 +9,14 @@ public class Player : NetworkBehaviour
 {
     private Agent agent;
 
-    public void UpdateAgent(List<Vector2> landmarkPoints, Vector2 gazePoint)
+    public void UpdateAgent(Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
     {
-        CmdDisplayAgent(netId, landmarkPoints, gazePoint);
+        CmdDisplayAgent(netId, rect, landmarkPoints, gazePoint);
     }
 
     public override void OnStartLocalPlayer()
     {
+        print("OnStartLocalPlayer");
         base.OnStartLocalPlayer();
         agent = GameObject.Find("Agent").GetComponent<Agent>();
         agent.OnUpdateAgent += UpdateAgent;
@@ -35,19 +36,23 @@ public class Player : NetworkBehaviour
 
 
     [Command]
-    void CmdDisplayAgent(NetworkInstanceId id, List<Vector2> landmarkPoints, Vector2 gazePoint)
+    void CmdDisplayAgent(NetworkInstanceId id, Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
     {
-        RpcDisplayAgent(id, landmarkPoints, gazePoint);
+        print("cmd" + id.Value);
+        RpcDisplayAgent(id, rect, landmarkPoints, gazePoint);
     }
 
     [ClientRpc]
-    void RpcDisplayAgent(NetworkInstanceId id, List<Vector2> landmarkPoints, Vector2 gazePoint)
+    void RpcDisplayAgent(NetworkInstanceId id, Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
     {
-        if(id.Value != netId.Value)
+        print("rpc");
+        print("netid" + netId.Value);
+        print("id" + id.Value);
+        if (id.Value == netId.Value)
         {
             if(agent != null)
             {
-                agent.SetAgent(landmarkPoints, gazePoint);
+                agent.SetAgent(rect, landmarkPoints, gazePoint);
             }
         }
     }

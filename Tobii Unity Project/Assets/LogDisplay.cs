@@ -17,11 +17,19 @@ public class LogDisplay : MonoBehaviour
     // ログの文字列を結合するのに使う
     StringBuilder m_StringBuilder = new StringBuilder();
 
+    private GUIStyle style;
+
     void Start()
     {
         // Application.logMessageReceivedに関数を登録しておくと、
         // ログが出力される際に呼んでくれる
         Application.logMessageReceived += LogReceived;
+        style = new GUIStyle();
+        GUIStyleState styleState = new GUIStyleState();
+
+        styleState.textColor = Color.black;
+        style.normal = styleState;
+
     }
 
     // ログが出力される際に呼んでもらう関数
@@ -49,6 +57,6 @@ public class LogDisplay : MonoBehaviour
         }
 
         // 画面に表示
-        GUI.Label(m_Area, m_StringBuilder.ToString());
+        GUI.Label(m_Area, m_StringBuilder.ToString(), style);
     }
 }

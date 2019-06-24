@@ -61,7 +61,7 @@ namespace DlibFaceLandmarkDetectorExample
         [SerializeField, TooltipAttribute("if it is remote setting.")]
         public bool remoteFlag = false;
 
-        public delegate void UpdateAgentEventHandler(List<Vector2> landmarkPoints, Vector2 gazePoint);
+        public delegate void UpdateAgentEventHandler(Rect agentRect, List<Vector2> landmarkPoints, Vector2 gazePoint);
         public event UpdateAgentEventHandler OnUpdateAgent;
 
         /// <summary>
@@ -150,6 +150,7 @@ namespace DlibFaceLandmarkDetectorExample
 
         Vector2 RemoteGazePoint = new Vector2();
         List<Vector2> RemoteFaceLandmark = new List<Vector2>();
+        Rect RemoteRect = new Rect();
 
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -440,7 +441,7 @@ namespace DlibFaceLandmarkDetectorExample
                         var rect = detectResult[0];
                         var w = (int)rect.width;
                         var h = (int)rect.height;
-                        Color32[] res = new Color32[colors.Length];
+                       
 
 
                         //detect landmark points
@@ -475,14 +476,17 @@ namespace DlibFaceLandmarkDetectorExample
                         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
                             - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
 
+                        Color32[] res;
                         if (remoteFlag)
                         {
-                            OnUpdateAgent?.Invoke(vectors, screenPos);
-                            DrawAgent(res, texture.width, texture.height, rect, RemoteFaceLandmark, RemoteGazePoint);
+                            OnUpdateAgent?.Invoke(rect, vectors, screenPos);
+                            res = new Color32[texture.width * texture.height];
+                            DrawAgent(res, texture.width, texture.height, RemoteRect, RemoteFaceLandmark, RemoteGazePoint);
                         }
                         else
                         {
-                            DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);
+                            res = new Color32[colors.Length];
+                            DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);                       
                         }
                         texture.SetPixels32(res);
                         texture.Apply(false);
@@ -491,8 +495,9 @@ namespace DlibFaceLandmarkDetectorExample
             }
         }
 
-        internal void SetAgent(List<Vector2> landmarkPoints, Vector2 gazePoint)
+        internal void SetAgent(Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
         {
+            RemoteRect = rect;
             RemoteFaceLandmark = landmarkPoints;
             RemoteGazePoint = gazePoint;
         }
@@ -506,7 +511,7 @@ namespace DlibFaceLandmarkDetectorExample
             Color32 color = new Color32(0, 0, 0, 255);
 
             // ランドマークを中心へ移動
-            AdjustVectors(landmarkPoints, width, height, rect);
+            //AdjustVectors(landmarkPoints, width, height, rect);
 
             // ランドマーク点描
             //for (int i = 0; i < landmarkPoints.Count; i++)
