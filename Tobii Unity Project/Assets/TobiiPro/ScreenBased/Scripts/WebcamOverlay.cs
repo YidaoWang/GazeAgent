@@ -1,15 +1,12 @@
-﻿using System.Collections;
+﻿using DlibFaceLandmarkDetectorExample;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class WebcamOverlay : MonoBehaviour
 {
-    public int Width = 1920;
-    public int Height = 1080;
-    public int FPS = 30;
-    public int CamDeviceNo = 0;
-    public float Alpha = 0.1f;
+    public float Alpha = 0.3f;
 
     void Start()
     {
@@ -21,12 +18,25 @@ public class WebcamOverlay : MonoBehaviour
         {
             Debug.Log(i.ToString() + ": " + devices[i].name);
         }
-        WebCamTexture webcamTexture = new WebCamTexture(devices[CamDeviceNo].name, Width, Height, FPS);
+        WebCamTexture webcamTexture = null;
 
         rawimage.texture = webcamTexture;
-        rawimage.material.mainTexture = webcamTexture;
+        //rawimage.material.mainTexture = webcamTexture;
         rawimage.color = new Color(rawimage.color.r, rawimage.color.g, rawimage.color.b, Alpha);
 
-        webcamTexture.Play();
+        //webcamTexture.Play();
+
+        var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+        conditionSettings.OnConditionChange += (media, cursor) => {
+            var rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
+            if (media == MediaCondition.F)
+            {
+                rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, Alpha);
+            }
+            else
+            {
+                rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
+            }
+        };
     }
 }

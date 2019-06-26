@@ -82,6 +82,20 @@ namespace Tobii.Research.Unity
 
         void Start()
         {
+            var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+            conditionSettings.OnConditionChange += (media, cursor) => {
+                var renderer = GameObject.Find("[GazePlot]").GetComponent<SpriteRenderer>();
+                
+                if (cursor == CursorCondition.C)
+                {
+                    renderer.color = new Color(renderer.color.r, renderer.color.g, renderer.color.b, 255);
+                }
+                else
+                {
+                    renderer.color = new Color(renderer.color.r, renderer.color.g, renderer.color.b, 0);
+                }
+            };
+
             _eyeTracker = EyeTracker.Instance;
             _calibrationObject = Calibration.Instance;
 

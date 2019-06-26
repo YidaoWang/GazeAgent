@@ -114,6 +114,9 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         int screenHeight;
 
+
+        float Alpha = 0.3f; 
+
         /// <summary>
         /// The face landmark detector.
         /// </summary>
@@ -144,6 +147,10 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         EyeTracker eyeTracker;
 
+        RawImage rawImage;
+
+        bool agentFlg = true;
+
         private IGazeData lastGazePoint = new GazeData();
 
         GameObject gazePlotter;
@@ -163,6 +170,33 @@ namespace DlibFaceLandmarkDetectorExample
             fpsMonitor = GetComponent<FpsMonitor>();
             gazePlotter = GameObject.Find("[GazePlot]");
             eyeTracker = EyeTracker.Instance;
+            rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
+
+            var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+            conditionSettings.OnConditionChange += (media, curser) =>
+            {
+                if (media == MediaCondition.A)
+                {
+                    agentFlg = true;
+                    rawImage.texture = null;
+                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
+
+                }
+                else if (media == MediaCondition.F)
+                {
+                    agentFlg = false;
+                    rawImage.texture = webCamTexture;
+                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, Alpha);            
+                }
+                else
+                {
+                    agentFlg = false;
+                    rawImage.texture = null;
+                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
+
+                }
+            };
+
 
             //adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
 
@@ -179,6 +213,8 @@ namespace DlibFaceLandmarkDetectorExample
             dlibShapePredictorFilePath = Utils.getFilePath(dlibShapePredictorFileName);
             Run();
 #endif
+
+          
         }
 
         private void Run()
@@ -425,73 +461,79 @@ namespace DlibFaceLandmarkDetectorExample
             }
 
             //print(hasInitDone.ToString() + webCamTexture.isPlaying.ToString() + webCamTexture.didUpdateThisFrame.ToString());
-            if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
+            if (agentFlg)
             {
-                Color32[] colors = GetColors();
-
-                if (colors != null)
+                if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
                 {
-                    faceLandmarkDetector.SetImage<Color32>(colors, texture.width, texture.height, 4, true);
+                    Color32[] colors = GetColors();
 
-                    //detect face rects
-                    List<Rect> detectResult = faceLandmarkDetector.Detect();
-
-                    if (detectResult.Count > 0)
+                    if (colors != null)
                     {
-                        var rect = detectResult[0];
-                        var w = (int)rect.width;
-                        var h = (int)rect.height;
-                       
+                        faceLandmarkDetector.SetImage<Color32>(colors, texture.width, texture.height, 4, true);
 
+                        //detect face rects
+                        List<Rect> detectResult = faceLandmarkDetector.Detect();
 
-                        //detect landmark points
-                        var vectors = faceLandmarkDetector.DetectLandmark(rect);
-
-                        //faceLandmarkDetector.DrawDetectLandmarkResult()
-
-                        //draw landmark points
-                        //faceLandmarkDetector.DrawDetectLandmarkResult<Color32>(res, texture.width, texture.height, 4, true, 0, 255, 0, 255);
-
-                        //draw face rect
-                        //faceLandmarkDetector.DrawDetectResult<Color32> (res, texture.width, texture.height, 4, true, 255, 0, 0, 255, 2);
-
-                        //adjust face landmark
-                        //var adjusted = AdjustRect(res, texture.width, texture.height, rect);
-
-                        //OnUpdateAgent?.Invoke();
-
-                        //var gazeData = eyeTracker.LatestGazeData;
-                        //Vector3 transform;
-                        //if (gazeData.CombinedGazeRayScreenValid && gazeData.TimeStamp > (lastGazePoint.TimeStamp + float.Epsilon))
-                        //{
-                        //    lastGazePoint = gazeData;
-                        //    transform = GazePlotter.ProjectToPlaneInWorld(gazeData);
-                        //}
-                        //else
-                        //{
-                        //    transform = GazePlotter.ProjectToPlaneInWorld(lastGazePoint);
-                        //}
-
-                        Vector2 gazePos = gazePlotter.transform.localPosition;
-                        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
-                            - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
-
-                        Color32[] res;
-                        if (remoteFlag)
+                        if (detectResult.Count > 0)
                         {
-                            OnUpdateAgent?.Invoke(rect, vectors, screenPos);
-                            res = new Color32[texture.width * texture.height];
-                            DrawAgent(res, texture.width, texture.height, RemoteRect, RemoteFaceLandmark, RemoteGazePoint);
+                            var rect = detectResult[0];
+                            var w = (int)rect.width;
+                            var h = (int)rect.height;
+
+                            //detect landmark points
+                            var vectors = faceLandmarkDetector.DetectLandmark(rect);
+
+                            //faceLandmarkDetector.DrawDetectLandmarkResult()
+
+                            //draw landmark points
+                            //faceLandmarkDetector.DrawDetectLandmarkResult<Color32>(res, texture.width, texture.height, 4, true, 0, 255, 0, 255);
+
+                            //draw face rect
+                            //faceLandmarkDetector.DrawDetectResult<Color32> (res, texture.width, texture.height, 4, true, 255, 0, 0, 255, 2);
+
+                            //adjust face landmark
+                            //var adjusted = AdjustRect(res, texture.width, texture.height, rect);
+
+                            //OnUpdateAgent?.Invoke();
+
+                            //var gazeData = eyeTracker.LatestGazeData;
+                            //Vector3 transform;
+                            //if (gazeData.CombinedGazeRayScreenValid && gazeData.TimeStamp > (lastGazePoint.TimeStamp + float.Epsilon))
+                            //{
+                            //    lastGazePoint = gazeData;
+                            //    transform = GazePlotter.ProjectToPlaneInWorld(gazeData);
+                            //}
+                            //else
+                            //{
+                            //    transform = GazePlotter.ProjectToPlaneInWorld(lastGazePoint);
+                            //}
+
+                            Vector2 gazePos = gazePlotter.transform.localPosition;
+                            Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
+                                - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
+
+                            Color32[] res;
+                            if (remoteFlag)
+                            {
+                                OnUpdateAgent?.Invoke(rect, vectors, screenPos);
+                                res = new Color32[texture.width * texture.height];
+                                DrawAgent(res, texture.width, texture.height, RemoteRect, RemoteFaceLandmark, RemoteGazePoint);
+                            }
+                            else
+                            {
+                                res = new Color32[colors.Length];
+                                DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);
+                            }
+                            texture.SetPixels32(res);
+                            texture.Apply(false);
                         }
-                        else
-                        {
-                            res = new Color32[colors.Length];
-                            DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);                       
-                        }
-                        texture.SetPixels32(res);
-                        texture.Apply(false);
                     }
-                }
+                }           
+            }
+            else
+            {
+                texture.SetPixels32(new Color32[texture.width * texture.height]);
+                texture.Apply(false);
             }
         }
 
