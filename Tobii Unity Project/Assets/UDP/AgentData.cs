@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.UDP
 {
-    public class AgentData
+    public class AgentData : IMediaData
     {
         public const byte MEDIATYPE = 0;
         public Vector2 GazePoint { get; set; }
@@ -16,7 +16,7 @@ namespace Assets.UDP
         public AgentData(Vector2[] faceLandmark, Vector2 gazePoint)
         {
             FaceLandmark = faceLandmark;
-            gazePoint = GazePoint;
+            GazePoint = gazePoint;
         }
 
         public AgentData(byte[] agentData)
@@ -27,8 +27,9 @@ namespace Assets.UDP
             Buffer.BlockCopy(agentData, 1, floatArray, 0, agentData.Length - 1);
 
             GazePoint = new Vector2(floatArray[0], floatArray[1]);
+            
             FaceLandmark = new Vector2[floatArray.Length / 2 - 1];
-            for(var i = 0; i < FaceLandmark.Length; i++)
+            for (var i = 0; i < FaceLandmark.Length; i++)
             {
                 FaceLandmark[i] = new Vector2(floatArray[i * 2 + 2], floatArray[i * 2 + 3]);
             }
@@ -36,10 +37,12 @@ namespace Assets.UDP
 
         public byte[] ToBytes()
         {
+            if (FaceLandmark == null) return null;
             var floatArray = new float[(FaceLandmark.Length + 1) * 2];
 
             floatArray[0] = GazePoint.x;
             floatArray[1] = GazePoint.y;
+            
 
             for (var i = 0; i < FaceLandmark.Length; i++)
             {

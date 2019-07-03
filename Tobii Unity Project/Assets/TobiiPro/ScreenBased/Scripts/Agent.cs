@@ -27,7 +27,6 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         FaceLandmarkDetector faceLandmarkDetector;
 
-        GameObject gazePlotter;
 
         public int Width { get; }
         public int Height { get;}
@@ -56,12 +55,10 @@ namespace DlibFaceLandmarkDetectorExample
 
             faceLandmarkDetector = new FaceLandmarkDetector(dlibShapePredictorFilePath);
 
-            gazePlotter = GameObject.Find("[GazePlot]");
-
         }
 
 
-        public List<Vector2> GetLandmarkPoints(Color32[] colors)
+        public Vector2[] GetLandmarkPoints(Color32[] colors)
         {
             faceLandmarkDetector.SetImage<Color32>(colors, Width, Height, 4, true);
 
@@ -75,7 +72,7 @@ namespace DlibFaceLandmarkDetectorExample
                 var h = (int)rect.height;
 
                 //detect landmark points
-                return faceLandmarkDetector.DetectLandmark(rect);
+                return faceLandmarkDetector.DetectLandmark(rect).ToArray();
             }
 
             return null;
@@ -83,9 +80,9 @@ namespace DlibFaceLandmarkDetectorExample
 
         
 
-        public void DrawAgent(Texture2D texture, List<Vector2> landmarkPoints, Vector2 gazePoint)
+        public void DrawAgent(Texture2D texture, Vector2[] landmarkPoints, Vector2 gazePoint)
         {
-            if (landmarkPoints == null || landmarkPoints.Count < 67) return;
+            if (landmarkPoints == null || landmarkPoints.Length < 67) return;
 
             var colors = new Color32[Width * Height];
             //int thickness = 3;

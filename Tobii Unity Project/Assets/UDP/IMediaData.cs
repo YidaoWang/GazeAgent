@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets.TobiiPro.ScreenBased.Scripts
+namespace Assets.UDP
 {
-    class DataManager
+    public interface IMediaData
     {
+        byte[] ToBytes();
     }
 }

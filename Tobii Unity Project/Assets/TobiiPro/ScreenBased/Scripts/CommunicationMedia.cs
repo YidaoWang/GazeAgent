@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 using Tobii.Research.Unity;
 using UnityEngine.UI;
 using DlibFaceLandmarkDetectorExample;
+using Assets.TobiiPro.ScreenBased.Scripts;
+using Assets.UDP;
 
 /// <summary>
 /// WebCamTexture Example
@@ -109,7 +111,8 @@ public class CommunicationMedia : MonoBehaviour
     /// </summary>
     int screenHeight;
 
-
+    private RenderingManager renderingManager;
+    private GameObject gazePlotter;
     float Alpha = 0.3f;
 
 
@@ -149,6 +152,8 @@ public class CommunicationMedia : MonoBehaviour
         eyeTracker = EyeTracker.Instance;
         rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
         agent = new Agent(requestedWidth, requestedHeight);
+
+        gazePlotter = GameObject.Find("[GazePlot]");
 
         var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         conditionSettings.OnConditionChange += (media, curser) =>
@@ -374,6 +379,10 @@ public class CommunicationMedia : MonoBehaviour
 
         gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
+        renderingManager = new RenderingManager(remoteFlag, texture, agent);
+
+        print(renderingManager.ToString());
+
         gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
         Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
 
@@ -398,6 +407,9 @@ public class CommunicationMedia : MonoBehaviour
         {
             Camera.main.orthographicSize = height / 2;
         }
+
+      
+
     }
 
     // Update is called once per frame
@@ -429,7 +441,9 @@ public class CommunicationMedia : MonoBehaviour
                     var landmarks = agent.GetLandmarkPoints(colors);
                     var gazepoint = GetGazePoint();
 
-                    agent.DrawAgent(texture, landmarks, gazepoint);
+                    var agentData = new AgentData(landmarks, gazepoint);
+         
+                    renderingManager.Commit(agentData);
                 }
             }
         }
@@ -493,7 +507,10 @@ public class CommunicationMedia : MonoBehaviour
 
     public Vector2 GetGazePoint()
     {
-        var gazePlotter = GameObject.Find("[GazePlot]");
+        //if(gazePlotter == null)
+        //{
+        //    gazePlotter = GameObject.Find("[GazePlot]");
+        //}
         Vector2 gazePos = gazePlotter.transform.localPosition;
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
             - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
