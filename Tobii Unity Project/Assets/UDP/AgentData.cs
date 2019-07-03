@@ -9,6 +9,7 @@ namespace Assets.UDP
 {
     public class AgentData
     {
+        public const byte MEDIATYPE = 0;
         public Vector2 GazePoint { get; set; }
         public Vector2[] FaceLandmark { get; set; }
 
@@ -20,8 +21,10 @@ namespace Assets.UDP
 
         public AgentData(byte[] agentData)
         {
-            var floatArray = new float[agentData.Length / 4];
-            Buffer.BlockCopy(agentData, 0, floatArray, 0, agentData.Length);
+            if (agentData[0] != MEDIATYPE) return;
+
+            var floatArray = new float[(agentData.Length - 1) / 4];
+            Buffer.BlockCopy(agentData, 1, floatArray, 0, agentData.Length - 1);
 
             GazePoint = new Vector2(floatArray[0], floatArray[1]);
             FaceLandmark = new Vector2[floatArray.Length / 2 - 1];
@@ -44,8 +47,9 @@ namespace Assets.UDP
                 floatArray[i * 2 + 3] = FaceLandmark[i].y;
             }
 
-            var byteArray = new byte[floatArray.Length * 4];
-            Buffer.BlockCopy(floatArray, 0, byteArray, 0, byteArray.Length);
+            var byteArray = new byte[floatArray.Length * 4 + 1];
+            byteArray[0] = MEDIATYPE;
+            Buffer.BlockCopy(floatArray, 0, byteArray, 1, byteArray.Length - 1);
 
             return byteArray;
         }

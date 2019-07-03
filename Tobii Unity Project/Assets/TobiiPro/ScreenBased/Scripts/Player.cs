@@ -16,10 +16,10 @@ public class Player : NetworkBehaviour
 
     public override void OnStartLocalPlayer()
     {
-        print("OnStartLocalPlayer");
-        base.OnStartLocalPlayer();
-        media = GameObject.Find("CommunicationMedia").GetComponent<CommunicationMedia>();
-        media.OnUpdateAgent += UpdateAgent;
+    //    print("OnStartLocalPlayer");
+    //    base.OnStartLocalPlayer();
+    //    media = GameObject.Find("CommunicationMedia").GetComponent<CommunicationMedia>();
+    //    media.OnUpdateAgent += UpdateAgent;
     }
 
     // Start is called before the first frame update

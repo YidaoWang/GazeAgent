@@ -138,9 +138,6 @@ public class CommunicationMedia : MonoBehaviour
 
     Agent agent;
 
-    public delegate void UpdateAgentEventHandler(Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint);
-    public event UpdateAgentEventHandler OnUpdateAgent;
-
 #if UNITY_WEBGL && !UNITY_EDITOR
         IEnumerator getFilePath_Coroutine;
 #endif
@@ -151,7 +148,7 @@ public class CommunicationMedia : MonoBehaviour
         fpsMonitor = GetComponent<FpsMonitor>();
         eyeTracker = EyeTracker.Instance;
         rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
-        agent = new Agent(remoteFlag);
+        agent = new Agent(requestedWidth, requestedHeight);
 
         var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         conditionSettings.OnConditionChange += (media, curser) =>
@@ -421,7 +418,6 @@ public class CommunicationMedia : MonoBehaviour
             }
         }
 
-        //print(hasInitDone.ToString() + webCamTexture.isPlaying.ToString() + webCamTexture.didUpdateThisFrame.ToString());
         if (agentFlg)
         {
             if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
@@ -430,7 +426,10 @@ public class CommunicationMedia : MonoBehaviour
 
                 if (colors != null)
                 {
-                    agent.DrawAgent(texture, colors);
+                    var landmarks = agent.GetLandmarkPoints(colors);
+                    var gazepoint = GetGazePoint();
+
+                    agent.DrawAgent(texture, landmarks, gazepoint);
                 }
             }
         }
@@ -490,6 +489,16 @@ public class CommunicationMedia : MonoBehaviour
             }
         }
         return colors;
+    }
+
+    public Vector2 GetGazePoint()
+    {
+        var gazePlotter = GameObject.Find("[GazePlot]");
+        Vector2 gazePos = gazePlotter.transform.localPosition;
+        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
+            - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
+
+        return screenPos;
     }
 
     /// <summary>

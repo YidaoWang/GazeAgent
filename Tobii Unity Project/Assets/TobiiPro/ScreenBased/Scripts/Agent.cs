@@ -29,20 +29,13 @@ namespace DlibFaceLandmarkDetectorExample
 
         GameObject gazePlotter;
 
-        bool remoteFlag;
+        public int Width { get; }
+        public int Height { get;}
 
-        Rect RemoteRect;
-        List<Vector2> RemoteFaceLandmark;
-        Vector2 RemoteGazePoint;
-
-
-        public delegate void UpdateAgentEventHandler(Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint);
-        public event UpdateAgentEventHandler OnUpdateAgent;
-
-
-        public Agent(bool remoteFlag)
+        public Agent(int width, int height)
         {
-            this.remoteFlag = remoteFlag;
+            Width = width;
+            Height = height;
 
             dlibShapePredictorFileName = DlibFaceLandmarkDetectorExample.dlibShapePredictorFileName;
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -66,11 +59,11 @@ namespace DlibFaceLandmarkDetectorExample
             gazePlotter = GameObject.Find("[GazePlot]");
 
         }
-        
 
-        public void DrawAgent(Texture2D texture,Color32[] colors)
+
+        public List<Vector2> GetLandmarkPoints(Color32[] colors)
         {
-            faceLandmarkDetector.SetImage<Color32>(colors, texture.width, texture.height, 4, true);
+            faceLandmarkDetector.SetImage<Color32>(colors, Width, Height, 4, true);
 
             //detect face rects
             List<Rect> detectResult = faceLandmarkDetector.Detect();
@@ -82,60 +75,22 @@ namespace DlibFaceLandmarkDetectorExample
                 var h = (int)rect.height;
 
                 //detect landmark points
-                var vectors = faceLandmarkDetector.DetectLandmark(rect);
-
-                //faceLandmarkDetector.DrawDetectLandmarkResult()
-
-                //draw landmark points
-                //faceLandmarkDetector.DrawDetectLandmarkResult<Color32>(res, texture.width, texture.height, 4, true, 0, 255, 0, 255);
-
-                //draw face rect
-                //faceLandmarkDetector.DrawDetectResult<Color32> (res, texture.width, texture.height, 4, true, 255, 0, 0, 255, 2);
-
-                //adjust face landmark
-                //var adjusted = AdjustRect(res, texture.width, texture.height, rect);
-
-                //OnUpdateAgent?.Invoke();
-
-                //var gazeData = eyeTracker.LatestGazeData;
-                //Vector3 transform;
-                //if (gazeData.CombinedGazeRayScreenValid && gazeData.TimeStamp > (lastGazePoint.TimeStamp + float.Epsilon))
-                //{
-                //    lastGazePoint = gazeData;
-                //    transform = GazePlotter.ProjectToPlaneInWorld(gazeData);
-                //}
-                //else
-                //{
-                //    transform = GazePlotter.ProjectToPlaneInWorld(lastGazePoint);
-                //}
-
-                Vector2 gazePos = gazePlotter.transform.localPosition;
-                Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
-                    - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
-
-                Color32[] res;
-                if (remoteFlag)
-                {
-                    OnUpdateAgent?.Invoke(rect, vectors, screenPos);
-                    res = new Color32[texture.width * texture.height];
-                    DrawAgent(res, texture.width, texture.height, RemoteRect, RemoteFaceLandmark, RemoteGazePoint);
-                }
-                else
-                {
-                    res = new Color32[colors.Length];
-                    DrawAgent(res, texture.width, texture.height, rect, vectors, screenPos);
-                }
-                texture.SetPixels32(res);
-                texture.Apply(false);
+                return faceLandmarkDetector.DetectLandmark(rect);
             }
+
+            return null;
         }
 
-        public void DrawAgent(Color32[] colors, int width, int height, Rect rect, List<Vector2> landmarkPoints, Vector2 gazePoint)
+        
+
+        public void DrawAgent(Texture2D texture, List<Vector2> landmarkPoints, Vector2 gazePoint)
         {
-            if (landmarkPoints.Count < 67) return;
+            if (landmarkPoints == null || landmarkPoints.Count < 67) return;
+
+            var colors = new Color32[Width * Height];
             //int thickness = 3;
             int pupil = 10;
-            Vector2 flipedGazePoint = new Vector2(gazePoint.x, height - gazePoint.y);
+            Vector2 flipedGazePoint = new Vector2(gazePoint.x, Height - gazePoint.y);
             Color32 color = new Color32(0, 0, 0, 255);
 
             // ランドマークを中心へ移動
@@ -160,28 +115,28 @@ namespace DlibFaceLandmarkDetectorExample
             var lr = (landmarkPoints[39] - landmarkPoints[36]).magnitude / 2;
             var lcenter = landmarkPoints[36] + (landmarkPoints[39] - landmarkPoints[36]) / 2;
 
-            DrawCircle(colors, width, height, lcenter, lr + 5, color, true);
+            DrawCircle(colors, Width, Height, lcenter, lr + 5, color, true);
 
 
             var ldel = (flipedGazePoint - lcenter) * (20.0f / 320);
             //ldel = new Vector2(Math.Min(ldel.x, 20), Math.Min(ldel.y, 20));
-            DrawCircle(colors, width, height, lcenter + ldel, pupil, color, true, true);
+            DrawCircle(colors, Width, Height, lcenter + ldel, pupil, color, true, true);
 
             // 右目
             var rr = (landmarkPoints[42] - landmarkPoints[45]).magnitude / 2;
             var rcenter = landmarkPoints[42] + (landmarkPoints[45] - landmarkPoints[42]) / 2;
 
-            DrawCircle(colors, width, height, rcenter, rr + 5, color, true);
+            DrawCircle(colors, Width, Height, rcenter, rr + 5, color, true);
 
             var rdel = (flipedGazePoint - rcenter) * (20.0f / 320);
             //rdel = new Vector2(Math.Min(rdel.x, 20), Math.Min(rdel.y, 20));
-            DrawCircle(colors, width, height, rcenter + rdel, pupil, color, true, true);
+            DrawCircle(colors, Width, Height, rcenter + rdel, pupil, color, true, true);
 
 
             // 輪郭
             for (var i = 0; i < 16; i++)
             {
-                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
             // 眉
             //for (var i = 17; i < 26; i++)
@@ -191,25 +146,26 @@ namespace DlibFaceLandmarkDetectorExample
             // 鼻
             for (var i = 27; i < 35; i++)
             {
-                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
-            DrawLine(colors, width, height, landmarkPoints[35], landmarkPoints[30], color);
+            DrawLine(colors, Width, Height, landmarkPoints[35], landmarkPoints[30], color);
 
             // 口外形
             for (var i = 48; i < 59; i++)
             {
-                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
-            DrawLine(colors, width, height, landmarkPoints[59], landmarkPoints[48], color);
+            DrawLine(colors, Width, Height, landmarkPoints[59], landmarkPoints[48], color);
 
             // 口内形
             for (var i = 60; i < 67; i++)
             {
-                DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
-            DrawLine(colors, width, height, landmarkPoints[67], landmarkPoints[60], color);
+            DrawLine(colors, Width, Height, landmarkPoints[67], landmarkPoints[60], color);
 
-            //AdjustRect(colors, width, height, rect);
+            texture.SetPixels32(colors);
+            texture.Apply(false);
         }
 
         private int PointToSequence(Vector2 point, int width, int heigth, bool flip)

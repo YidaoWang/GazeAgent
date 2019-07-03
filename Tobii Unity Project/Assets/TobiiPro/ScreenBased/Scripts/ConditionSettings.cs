@@ -3,20 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum MediaCondition 
+public enum MediaCondition
 {
-    A, F, N
+    A = 0, F = 1, N = 2
 }
 
 public enum CursorCondition
 {
-    C, N
+    C = 0, N = 1
 }
 
 public class ConditionSettings : MonoBehaviour
-{ 
+{
     public delegate void OnConditionChangeEventHandler(MediaCondition media, CursorCondition cursor);
     public event OnConditionChangeEventHandler OnConditionChange;
+
+    public static MediaCondition MediaCondition { get; set; }
+    public static CursorCondition CursorCondition { get; set; }
 
     void Start()
     {
@@ -25,31 +28,38 @@ public class ConditionSettings : MonoBehaviour
 
     public void AOnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.A, CursorCondition.N);
+        ChangeCondition(MediaCondition.A, CursorCondition.N);
     }
 
     public void FOnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.F, CursorCondition.N);
+        ChangeCondition(MediaCondition.F, CursorCondition.N);
     }
 
     public void NOnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.N, CursorCondition.N);
+        ChangeCondition(MediaCondition.N, CursorCondition.N);
     }
 
     public void ACOnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.A, CursorCondition.C);
+        ChangeCondition(MediaCondition.A, CursorCondition.C);
     }
 
     public void FCOnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.F, CursorCondition.C);
+        ChangeCondition(MediaCondition.F, CursorCondition.C);
     }
 
     public void COnClick()
     {
-        OnConditionChange?.Invoke(MediaCondition.N, CursorCondition.C);
+        ChangeCondition(MediaCondition.N, CursorCondition.C);
+    }
+
+    void ChangeCondition(MediaCondition mediaCondition, CursorCondition cursorCondition)
+    {
+        MediaCondition = mediaCondition;
+        CursorCondition = CursorCondition;
+        OnConditionChange?.Invoke(mediaCondition, cursorCondition);
     }
 }
