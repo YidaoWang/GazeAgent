@@ -379,7 +379,12 @@ public class CommunicationMedia : MonoBehaviour
 
         gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
-        renderingManager = new RenderingManager(remoteFlag, texture, agent);
+
+        var myIpAddr = ScanIPAddr.IP[0];
+        var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
+        myIP.text = myIpAddr + ":5000";
+        
+        renderingManager = new RenderingManager(texture, agent);
 
         print(renderingManager.ToString());
 
@@ -392,7 +397,6 @@ public class CommunicationMedia : MonoBehaviour
             fpsMonitor.Add("height", texture.height.ToString());
             fpsMonitor.Add("orientation", Screen.orientation.ToString());
         }
-
 
         float width = texture.width;
         float height = texture.height;
@@ -407,8 +411,14 @@ public class CommunicationMedia : MonoBehaviour
         {
             Camera.main.orthographicSize = height / 2;
         }
+    }
 
-      
+    public void Connect()
+    {
+        var local = GameObject.Find("MyIP").GetComponent<InputField>();
+        var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
+
+        renderingManager.SetUDP(local.text, remote.text);
 
     }
 

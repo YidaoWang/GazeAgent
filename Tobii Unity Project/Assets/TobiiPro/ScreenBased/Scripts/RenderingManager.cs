@@ -13,30 +13,37 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
     {
         public bool RemoteFlg { get; set; }
 
-        string remoteHost { get; set; }
-        int remotePort { get; set; }
-
-        string localHost { get; set; }
-        int localPort { get; set; }
-
         private Texture2D texture;
 
         public UDPSystem UdpSystem { get; set; }
 
         public Agent agent;
 
-        public RenderingManager(bool remoteFlg, Texture2D texture, Agent agent)
+        public RenderingManager(Texture2D texture, Agent agent)
+        {
+            RemoteFlg = false;
+            this.texture = texture;
+            this.agent = agent;        
+        }
+
+        public void SetUDP(string localadress, string remoteadress, bool remoteFlg = true)
         {
             RemoteFlg = remoteFlg;
-            this.texture = texture;
-            this.agent = agent;
-            localHost = "192.168.3.6";
-            localPort = 5001;
-            remoteHost = "192.168.3.6";
-            remotePort = 5002;
+
+            var localipport = localadress.Split(':');
+            var remoteipport = remoteadress.Split(':');
+
+            var localip = localipport[0];
+            var localport = int.Parse(localipport[1]);
+            var remoteip = remoteipport[0];
+            var remoteport = int.Parse(remoteipport[1]);
+
+            Debug.Log("local:" + localip + ":" + localport);
+            Debug.Log("remote:" + remoteip + ":" + remoteport);
+
 
             UdpSystem = new UDPSystem((x) => Receive(x));
-            UdpSystem.Set(localHost, localPort, remoteHost, remotePort);
+            UdpSystem.Set(localip, localport, remoteip, remoteport);
             UdpSystem.Receive();
         }
 
@@ -48,8 +55,7 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             }
             switch (ConditionSettings.MediaCondition)
             {
-                case MediaCondition.A:
-                   
+                case MediaCondition.A:                
                     var agentData = new AgentData(data);
                     agent.DrawAgent(texture, agentData.FaceLandmark, agentData.GazePoint);
                     break;
