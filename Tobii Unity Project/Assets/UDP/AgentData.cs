@@ -37,14 +37,16 @@ namespace Assets.UDP
 
         public byte[] ToBytes()
         {
-            if (FaceLandmark == null) return null;
-            var floatArray = new float[(FaceLandmark.Length + 1) * 2];
+            var landmarkLength = FaceLandmark != null ? FaceLandmark.Length : 0;
+
+            var floatArray = new float[(landmarkLength + 1) * 2];
+
 
             floatArray[0] = GazePoint.x;
             floatArray[1] = GazePoint.y;
             
 
-            for (var i = 0; i < FaceLandmark.Length; i++)
+            for (var i = 0; i < landmarkLength; i++)
             {
                 floatArray[i * 2 + 2] = FaceLandmark[i].x;
                 floatArray[i * 2 + 3] = FaceLandmark[i].y;

@@ -12,12 +12,6 @@ namespace Assets.UDP
 {
     public class UDPSystem
     {
-
-        /* Set : 自分と相手のIP、Port、Byte受け取り先関数を指定します
-         * Receive() : 受信を開始します
-         * Send(byte[]): byteを送信します。　
-         * Stop():　WebSocketを閉じます。
-         */
         private class IPandPort
         {
             IPandPort(string ipAddr, int port)
@@ -43,8 +37,8 @@ namespace Assets.UDP
         Action<byte[]> callBack;
 
 
-        public string recIP, sendIP;
-        public int recPort = 5000, sendPort = 5000;
+        public string localIP, remoteIP;
+        public int localPort = 5000, remotePort = 5000;
 
         UdpClient udpClientSend;
         UdpClient tmpReceiver; //受信終了用TMP
@@ -54,24 +48,24 @@ namespace Assets.UDP
             callBack = callback;
 
         }
-        public UDPSystem(string rec_ip, int recport, string send_ip, int sendport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
+        public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
         {
             /* rec,send IP == null -> AnyIP */
 
-            recIP = rec_ip;
-            sendIP = send_ip;
-            recPort = recport;
-            sendPort = sendport;
+            localIP = local_ip;
+            remoteIP = remote_ip;
+            localPort = localport;
+            remotePort = remoteport;
             callBack = callback;
             onlyFlag = onlyflag;
         }
 
-        public void Set(string rec_ip, int recport, string send_ip, int sendport, Action<byte[]> callback = null)
+        public void Set(string local_ip, int localport, string remote_ip, int remoteport, Action<byte[]> callback = null)
         {
-            recIP = rec_ip;
-            sendIP = send_ip;
-            recPort = recport;
-            sendPort = sendport;
+            localIP = local_ip;
+            remoteIP = remote_ip;
+            localPort = localport;
+            remotePort = remoteport;
             if (callback != null) callBack = callback;
         }
         public void SetSendHostPort(int port, int portRange = 0) //送信用 自己ポート設定
@@ -92,8 +86,8 @@ namespace Assets.UDP
         }
         public void Receive() // ポートの監視を始めます。
         {
-            string targetIP = recIP; //受信
-            int port = recPort;
+            string targetIP = remoteIP; //受信
+            int port = remotePort;
 
             //if (recList.Contains(new IPandPort())) ;
 
@@ -103,6 +97,7 @@ namespace Assets.UDP
             else if (targetIP == "") udpClientReceive = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), port));
             else udpClientReceive = new UdpClient(new IPEndPoint(IPAddress.Parse(targetIP), port));
 
+            udpClientReceive.Connect(IPAddress.Parse(targetIP), port);
             udpClientReceive.BeginReceive(UDPReceive, udpClientReceive);
 
             if (targetIP == null) Debug.Log("受信を開始しました。 Any " + IPAddress.Any + " " + port);
@@ -164,7 +159,7 @@ namespace Assets.UDP
 
             try
             {
-                udpClientSend.Send(sendByte, sendByte.Length, sendIP, sendPort);
+                udpClientSend.Send(sendByte, sendByte.Length, remoteIP, remotePort);
             }
             catch (Exception e)
             {
@@ -174,8 +169,8 @@ namespace Assets.UDP
 
         public void Send_NonAsync2(byte[] sendByte) //同期送信を始めます。(2 検証済)
         {
-            string targetIP = sendIP;
-            int port = sendPort;
+            string targetIP = remoteIP;
+            int port = remotePort;
 
             if (udpClientSend == null) udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
 
@@ -185,51 +180,52 @@ namespace Assets.UDP
 
             if (targetIP == null)
             {
-                udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, sendPort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + sendPort);
+                udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort));
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
-                udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Parse(targetIP), sendPort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + sendPort);
+                udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Parse(targetIP), remotePort));
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
             }
         }
         public void Send(byte[] sendByte, byte retryCount = 0) //非同期送信をUdpClientで開始します。(通常) <retry>
         {
-            string targetIP = sendIP;
-            int port = sendPort;
+            if (sendByte == null) return;
+            string targetIP = remoteIP;
+            int port = remotePort;
 
-            if (sendTaskCount > 0)//送信中タスクの確認。 送信中有の場合、定数時間後リトライ
-            {
+            //if (sendTaskCount > 0)//送信中タスクの確認。 送信中有の場合、定数時間後リトライ
+            //{
 
-                Debug.Log("SendTask is There.[" + retryCount);
-                retryCount++;
+            //    Debug.Log("SendTask is There.[" + retryCount);
+            //    retryCount++;
 
-                if (retryCount > 10)
-                {
-                    Debug.LogError("Retry OverFlow.");
-                    return;
-                }
+            //    if (retryCount > 10)
+            //    {
+            //        Debug.LogError("Retry OverFlow.");
+            //        return;
+            //    }
 
-                Timer timer = new Timer(RETRY_SEND_TIME);
-                timer.Elapsed += delegate (object obj, ElapsedEventArgs e) { Send(sendByte, retryCount); timer.Stop(); };
-                timer.Start();
-                return;
-            }
-            sendTaskCount++; //送信中タスクを増加
+            //    Timer timer = new Timer(RETRY_SEND_TIME);
+            //    timer.Elapsed += delegate (object obj, ElapsedEventArgs e) { Send(sendByte, retryCount); timer.Stop(); };
+            //    timer.Start();
+            //    return;
+            //}
+            //sendTaskCount++; //送信中タスクを増加
 
             if (udpClientSend == null)
                 udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
 
             if (targetIP == null)
             {
-                udpClientSend.BeginSend(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, sendPort), UDPSender, udpClientSend);
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + sendPort);
+                udpClientSend.BeginSend(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort), UDPSender, udpClientSend);
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
-                udpClientSend.BeginSend(sendByte, sendByte.Length, sendIP, sendPort, UDPSender, udpClientSend);
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + sendPort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
+                udpClientSend.BeginSend(sendByte, sendByte.Length, remoteIP, remotePort, UDPSender, udpClientSend);
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
             }
         }
 
