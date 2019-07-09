@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         private Texture2D texture;
 
+        public SynchronizationContext MainContext { get; private set; }
+
         public UDPSystem UdpSystem { get; set; }
 
         public Agent agent;
@@ -23,7 +26,8 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
         {
             RemoteFlg = false;
             this.texture = texture;
-            this.agent = agent;        
+            this.agent = agent;
+            MainContext = SynchronizationContext.Current;
         }
 
         public void SetUDP(string localadress, string remoteadress, bool remoteFlg = true)
@@ -41,7 +45,6 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             Debug.Log("local:" + localip + ":" + localport);
             Debug.Log("remote:" + remoteip + ":" + remoteport);
 
-
             UdpSystem = new UDPSystem((x) => Receive(x));
             UdpSystem.Set(localip, localport, remoteip, remoteport);
             UdpSystem.Receive();
@@ -49,15 +52,20 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         public void Receive(byte[] data)
         {
-            if(data == null || data[0] != (byte)ConditionSettings.MediaCondition)
+            if (data == null || data[0] != (byte)ConditionSettings.MediaCondition)
             {
                 return;
             }
             switch (ConditionSettings.MediaCondition)
             {
-                case MediaCondition.A:                
+                case MediaCondition.A:
                     var agentData = new AgentData(data);
-                    agent.DrawAgent(texture, agentData.FaceLandmark, agentData.GazePoint);
+                    Debug.Log("landmark:" + agentData.FaceLandmark.Length);
+                    Debug.Log("gazepoint:" + agentData.GazePoint);
+                    MainContext.Post(_ =>
+                    {
+                        agent.DrawAgent(texture, agentData.FaceLandmark, agentData.GazePoint);
+                    }, null);
                     break;
                 case MediaCondition.F:
                     break;
@@ -74,7 +82,7 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             }
             else
             {
-                UdpSystem.Send(data.ToBytes());
+                UdpSystem.Send_NonAsync2(data.ToBytes());
             }
         }
 

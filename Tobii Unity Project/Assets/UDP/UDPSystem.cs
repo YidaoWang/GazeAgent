@@ -86,8 +86,8 @@ namespace Assets.UDP
         }
         public void Receive() // ポートの監視を始めます。
         {
-            string targetIP = remoteIP; //受信
-            int port = remotePort;
+            string targetIP = localIP; //受信
+            int port = localPort;
 
             //if (recList.Contains(new IPandPort())) ;
 
@@ -97,7 +97,7 @@ namespace Assets.UDP
             else if (targetIP == "") udpClientReceive = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), port));
             else udpClientReceive = new UdpClient(new IPEndPoint(IPAddress.Parse(targetIP), port));
 
-            udpClientReceive.Connect(IPAddress.Parse(targetIP), port);
+            //udpClientReceive.Connect(IPAddress.Parse(remoteIP), remotePort);
             udpClientReceive.BeginReceive(UDPReceive, udpClientReceive);
 
             if (targetIP == null) Debug.Log("受信を開始しました。 Any " + IPAddress.Any + " " + port);
@@ -109,7 +109,7 @@ namespace Assets.UDP
 
         void UDPReceive(IAsyncResult res)
         {// CallBack ポートに着信があると呼ばれます。
-
+            Debug.Log("received");
             if (finishFlag)
             {
                 FinishUDP(res.AsyncState as UdpClient);
@@ -123,7 +123,8 @@ namespace Assets.UDP
             try
             { //受信成功時アクション
                 getByte = getUdp.EndReceive(res, ref ipEnd);
-                if (callBack != null) callBack(getByte);
+                Debug.Log("getByte.Length:" + getByte.Length);
+                callBack?.Invoke(getByte);
             }
             catch (SocketException ex)
             {

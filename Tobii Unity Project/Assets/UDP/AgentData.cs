@@ -21,6 +21,7 @@ namespace Assets.UDP
 
         public AgentData(byte[] agentData)
         {
+            
             if (agentData[0] != MEDIATYPE) return;
 
             var floatArray = new float[(agentData.Length - 1) / 4];
