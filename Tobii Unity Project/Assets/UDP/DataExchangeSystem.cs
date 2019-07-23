@@ -83,8 +83,8 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
                     OnReceive?.Invoke(new AgentMediaData(data));
                     break;
                 case MediaCondition.F:
-                    //LatestVideoData = new VideoMediaData(data);
-                    OnReceive?.Invoke(new VideoMediaData(data));
+                    var videoData = new VideoMediaData(data);
+                    OnReceive?.Invoke(videoData);
                     break;
                 default:
                     LatestGazeData = new GazeMediaData(data);

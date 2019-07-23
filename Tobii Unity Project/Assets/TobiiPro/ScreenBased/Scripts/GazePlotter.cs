@@ -25,6 +25,8 @@ namespace Tobii.Research.Unity
 
         // Members used for gaze bubble (filtered gaze visualization):
         private SpriteRenderer GazeBubbleRenderer;      // the gaze bubble sprite is attached to the GazePlotter game object itself
+        private Vector3 _historicPoint;
+        private bool _hasHistoricPoint;
 
         void Start()
         {
@@ -93,8 +95,8 @@ namespace Tobii.Research.Unity
         private Vector3 GetGazePointdata(IGazeData gazePoint)
         {
             Vector3 gazePointInWorld = ProjectToPlaneInWorld(gazePoint);
-            return gazePointInWorld;
-            //return Smoothify(gazePointInWorld);
+            //return gazePointInWorld;
+            return Smoothify(gazePointInWorld);
         }
 
         public static Vector3 ProjectToPlaneInWorld(IGazeData gazePoint)
@@ -109,23 +111,23 @@ namespace Tobii.Research.Unity
             return Vector3.zero;
         }
 
-        //private Vector3 Smoothify(Vector3 point)
-        //{
-        //    if (!_hasHistoricPoint)
-        //    {
-        //        _historicPoint = point;
-        //        _hasHistoricPoint = true;
-        //    }
+        private Vector3 Smoothify(Vector3 point)
+        {
+            if (!_hasHistoricPoint)
+            {
+                _historicPoint = point;
+                _hasHistoricPoint = true;
+            }
 
-        //    var smoothedPoint = new Vector3(
-        //        point.x * (1.0f - FilterSmoothingFactor) + _historicPoint.x * FilterSmoothingFactor,
-        //        point.y * (1.0f - FilterSmoothingFactor) + _historicPoint.y * FilterSmoothingFactor,
-        //        point.z * (1.0f - FilterSmoothingFactor) + _historicPoint.z * FilterSmoothingFactor);
+            var smoothedPoint = new Vector3(
+                point.x * (1.0f - FilterSmoothingFactor) + _historicPoint.x * FilterSmoothingFactor,
+                point.y * (1.0f - FilterSmoothingFactor) + _historicPoint.y * FilterSmoothingFactor,
+                point.z * (1.0f - FilterSmoothingFactor) + _historicPoint.z * FilterSmoothingFactor);
 
-        //    _historicPoint = smoothedPoint;
+            _historicPoint = smoothedPoint;
 
-        //    return smoothedPoint;
-        //}
+            return smoothedPoint;
+        }
     }
 }
 
