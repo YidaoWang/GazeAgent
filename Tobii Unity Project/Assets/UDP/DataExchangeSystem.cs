@@ -10,23 +10,25 @@ using UnityEngine;
 
 namespace Assets.TobiiPro.ScreenBased.Scripts
 {
-    public class RenderingManager
+    public class DataExchangeSystem : MonoBehaviour
     {
-        public bool RemoteFlg { get; set; }
-
-        private Texture2D texture;
+        [SerializeField, TooltipAttribute("Set remote condition.")]
+        public bool RemoteFlg;
 
         public SynchronizationContext MainContext { get; private set; }
 
         public UDPSystem UdpSystem { get; set; }
 
-        public Agent agent;
+        public delegate void OnReceiveEventHandler(IMediaData data);
+        public event OnReceiveEventHandler OnReceive;
 
-        public RenderingManager(Texture2D texture, Agent agent)
+        public GazeMediaData LatestGazeData { get; set; }
+        //public AgentMediaData LatestAgentData { get; set; }
+        //public VideoMediaData LatestVideoData { get; set; }
+
+        void Start()
         {
             RemoteFlg = false;
-            this.texture = texture;
-            this.agent = agent;
             MainContext = SynchronizationContext.Current;
         }
 
@@ -42,9 +44,6 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             var remoteip = remoteipport[0];
             var remoteport = int.Parse(remoteipport[1]);
 
-            Debug.Log("local:" + localip + ":" + localport);
-            Debug.Log("remote:" + remoteip + ":" + remoteport);
-
             UdpSystem = new UDPSystem((x) => Receive(x));
             UdpSystem.Set(localip, localport, remoteip, remoteport);
             UdpSystem.Receive();
@@ -52,41 +51,45 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         public void Receive(byte[] data)
         {
-            if (data == null || data[0] != (byte)ConditionSettings.MediaCondition)
+            if (data == null)
             {
                 return;
             }
-            switch (ConditionSettings.MediaCondition)
+            MainContext.Post(_ =>
+            {
+                ReceiveOnMainContext(data);
+            }, null);
+        }
+
+        private void ReceiveOnMainContext(byte[] data)
+        {
+            switch ((MediaCondition)data[0])
             {
                 case MediaCondition.A:
-                    var agentData = new AgentData(data);
-                    Debug.Log("landmark:" + agentData.FaceLandmark.Length);
-                    Debug.Log("gazepoint:" + agentData.GazePoint);
-                    MainContext.Post(_ =>
-                    {
-                        agent.DrawAgent(texture, agentData.FaceLandmark, agentData.GazePoint);
-                    }, null);
+                    //LatestAgentData = new AgentMediaData(data);
+                    OnReceive?.Invoke(new AgentMediaData(data));
                     break;
                 case MediaCondition.F:
+                    //LatestVideoData = new VideoMediaData(data);
+                    OnReceive?.Invoke(new VideoMediaData(data));
                     break;
                 default:
+                    LatestGazeData = new GazeMediaData(data);
+                    OnReceive?.Invoke(LatestGazeData);
                     break;
             }
         }
 
-        public void Commit(IMediaData data)
+        public void Post(IMediaData data)
         {
             if (!RemoteFlg)
             {
-                Receive(data.ToBytes());
+                ReceiveOnMainContext(data.ToBytes());
             }
             else
             {
                 UdpSystem.Send_NonAsync2(data.ToBytes());
             }
         }
-
-
-
     }
 }

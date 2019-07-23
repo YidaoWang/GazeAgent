@@ -8,6 +8,7 @@ namespace Assets.UDP
 {
     public interface IMediaData
     {
+        MediaCondition MediaCondition { get; }
         byte[] ToBytes();
     }
 }

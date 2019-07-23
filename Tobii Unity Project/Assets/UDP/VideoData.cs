@@ -7,9 +7,17 @@ using UnityEngine;
 
 namespace Assets.UDP
 {
-    public class VideoData : IMediaData
+    public class VideoMediaData : IMediaData
     {
-        public const byte MEDIATYPE = 1;
+        private byte[] data;
+
+        public MediaCondition MediaCondition => MediaCondition.F;
+
+        public VideoMediaData(byte[] data)
+        {
+            this.data = data;
+        }
+
         public Color32[] Colors { get; set; }
         public Vector2[] FaceLandmark { get; set; }
 

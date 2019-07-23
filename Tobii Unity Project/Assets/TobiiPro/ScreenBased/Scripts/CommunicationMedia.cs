@@ -111,11 +111,9 @@ public class CommunicationMedia : MonoBehaviour
     /// </summary>
     int screenHeight;
 
-    private RenderingManager renderingManager;
-    private GameObject gazePlotter;
+    private DataExchangeSystem dataExchangeSystem;
+
     float Alpha = 0.3f;
-
-
 
     /// <summary>
     /// The texture.
@@ -135,11 +133,13 @@ public class CommunicationMedia : MonoBehaviour
 
     RawImage rawImage;
 
-    bool agentFlg = true;
-
     private IGazeData lastGazePoint = new GazeData();
 
     Agent agent;
+
+    GazePlotter gazePlotter;
+
+
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         IEnumerator getFilePath_Coroutine;
@@ -152,8 +152,7 @@ public class CommunicationMedia : MonoBehaviour
         eyeTracker = EyeTracker.Instance;
         rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
         agent = new Agent(requestedWidth, requestedHeight);
-
-        gazePlotter = GameObject.Find("[GazePlot]");
+        gazePlotter = GameObject.Find("[GazePlot]").GetComponent<GazePlotter>();
 
         var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         conditionSettings.OnConditionChange += (media, curser) =>
@@ -161,17 +160,14 @@ public class CommunicationMedia : MonoBehaviour
             switch (media)
             {
                 case MediaCondition.A:
-                    agentFlg = true;
                     rawImage.texture = null;
                     rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
                     break;
                 case MediaCondition.F:
-                    agentFlg = false;
                     rawImage.texture = webCamTexture;
                     rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, Alpha);
                     break;
                 default:
-                    agentFlg = false;
                     rawImage.texture = null;
                     rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
                     break;
@@ -379,14 +375,15 @@ public class CommunicationMedia : MonoBehaviour
 
         gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
+        dataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
+
+        dataExchangeSystem.OnReceive += RenderingReceivedData;
+
 
         var myIpAddr = ScanIPAddr.IP[0];
         var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
         myIP.text = myIpAddr + ":5000";
         
-        renderingManager = new RenderingManager(texture, agent);
-
-        print(renderingManager.ToString());
 
         gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
         Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
@@ -413,19 +410,34 @@ public class CommunicationMedia : MonoBehaviour
         }
     }
 
+    public void RenderingReceivedData(IMediaData data)
+    {
+        if (dataExchangeSystem.LatestGazeData == null) return;
+        switch (data.MediaCondition)
+        {
+            case MediaCondition.A:
+                var agentData = data as AgentMediaData;
+                var screenPos = ToScreenPos(dataExchangeSystem.LatestGazeData.GazePoint);
+                agent.DrawAgent(texture, agentData.FaceLandmark, screenPos);
+                break;
+            case MediaCondition.F:
+                break;
+            default:
+                break;
+        }
+    }
+
     public void Connect()
     {
         var local = GameObject.Find("MyIP").GetComponent<InputField>();
         var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
-
-        renderingManager.SetUDP(local.text, remote.text);
-
+        
+        dataExchangeSystem.SetUDP(local.text, remote.text);
     }
 
     // Update is called once per frame
     void Update()
     {
-
         if (adjustPixelsDirection)
         {
             // Catch the orientation change of the screen.
@@ -440,7 +452,9 @@ public class CommunicationMedia : MonoBehaviour
             }
         }
 
-        if (agentFlg)
+        gazePlotter.UpdateGazePlotter(texture.width, texture.height);
+
+        if (ConditionSettings.MediaCondition == MediaCondition.A)
         {
             if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
             {
@@ -449,11 +463,10 @@ public class CommunicationMedia : MonoBehaviour
                 if (colors != null)
                 {
                     var landmarks = agent.GetLandmarkPoints(colors);
-                    var gazepoint = GetGazePoint();
 
-                    var agentData = new AgentData(landmarks, gazepoint);
+                    var agentData = new AgentMediaData(landmarks);
          
-                    renderingManager.Commit(agentData);
+                    dataExchangeSystem.Post(agentData);
                 }
             }
         }
@@ -462,6 +475,14 @@ public class CommunicationMedia : MonoBehaviour
             texture.SetPixels32(new Color32[texture.width * texture.height]);
             texture.Apply(false);
         }
+    }
+
+    private Vector2 ToScreenPos(Vector3 gazePos)
+    {
+        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
+            - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
+
+        return screenPos;
     }
 
     private List<Vector2> GetPixels(Vector2 point, int thickness)
@@ -513,19 +534,6 @@ public class CommunicationMedia : MonoBehaviour
             }
         }
         return colors;
-    }
-
-    public Vector2 GetGazePoint()
-    {
-        //if(gazePlotter == null)
-        //{
-        //    gazePlotter = GameObject.Find("[GazePlot]");
-        //}
-        Vector2 gazePos = gazePlotter.transform.localPosition;
-        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(Camera.main, gazePos)
-            - (new Vector2(Screen.width, Screen.height) - new Vector2(texture.width, texture.height)) / 2;
-
-        return screenPos;
     }
 
     /// <summary>

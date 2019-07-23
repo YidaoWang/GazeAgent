@@ -109,7 +109,6 @@ namespace Assets.UDP
 
         void UDPReceive(IAsyncResult res)
         {// CallBack ポートに着信があると呼ばれます。
-            Debug.Log("received");
             if (finishFlag)
             {
                 FinishUDP(res.AsyncState as UdpClient);
@@ -123,7 +122,6 @@ namespace Assets.UDP
             try
             { //受信成功時アクション
                 getByte = getUdp.EndReceive(res, ref ipEnd);
-                Debug.Log("getByte.Length:" + getByte.Length);
                 callBack?.Invoke(getByte);
             }
             catch (SocketException ex)
@@ -182,12 +180,12 @@ namespace Assets.UDP
             if (targetIP == null)
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
+                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Parse(targetIP), remotePort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
+                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
             }
         }
         public void Send(byte[] sendByte, byte retryCount = 0) //非同期送信をUdpClientで開始します。(通常) <retry>
@@ -221,12 +219,12 @@ namespace Assets.UDP
             if (targetIP == null)
             {
                 udpClientSend.BeginSend(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort), UDPSender, udpClientSend);
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
+                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
                 udpClientSend.BeginSend(sendByte, sendByte.Length, remoteIP, remotePort, UDPSender, udpClientSend);
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
+                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
             }
         }
 

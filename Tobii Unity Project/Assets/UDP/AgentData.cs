@@ -7,32 +7,28 @@ using UnityEngine;
 
 namespace Assets.UDP
 {
-    public class AgentData : IMediaData
+    public class AgentMediaData : IMediaData
     {
-        public const byte MEDIATYPE = 0;
-        public Vector2 GazePoint { get; set; }
         public Vector2[] FaceLandmark { get; set; }
 
-        public AgentData(Vector2[] faceLandmark, Vector2 gazePoint)
+        public MediaCondition MediaCondition => MediaCondition.A;
+
+        public AgentMediaData(Vector2[] faceLandmark)
         {
             FaceLandmark = faceLandmark;
-            GazePoint = gazePoint;
         }
 
-        public AgentData(byte[] agentData)
-        {
-            
-            if (agentData[0] != MEDIATYPE) return;
+        public AgentMediaData(byte[] agentData)
+        {      
+            if (agentData[0] != (byte)MediaCondition) return;
 
             var floatArray = new float[(agentData.Length - 1) / 4];
-            Buffer.BlockCopy(agentData, 1, floatArray, 0, agentData.Length - 1);
-
-            GazePoint = new Vector2(floatArray[0], floatArray[1]);
+            Buffer.BlockCopy(agentData, 1, floatArray, 0, agentData.Length - 1);      
             
-            FaceLandmark = new Vector2[floatArray.Length / 2 - 1];
+            FaceLandmark = new Vector2[floatArray.Length / 2];
             for (var i = 0; i < FaceLandmark.Length; i++)
             {
-                FaceLandmark[i] = new Vector2(floatArray[i * 2 + 2], floatArray[i * 2 + 3]);
+                FaceLandmark[i] = new Vector2(floatArray[i * 2], floatArray[i * 2 + 1]);
             }
         }
 
@@ -40,21 +36,16 @@ namespace Assets.UDP
         {
             var landmarkLength = FaceLandmark != null ? FaceLandmark.Length : 0;
 
-            var floatArray = new float[(landmarkLength + 1) * 2];
-
-
-            floatArray[0] = GazePoint.x;
-            floatArray[1] = GazePoint.y;
-            
+            var floatArray = new float[landmarkLength * 2];
 
             for (var i = 0; i < landmarkLength; i++)
             {
-                floatArray[i * 2 + 2] = FaceLandmark[i].x;
-                floatArray[i * 2 + 3] = FaceLandmark[i].y;
+                floatArray[i * 2] = FaceLandmark[i].x;
+                floatArray[i * 2 + 1] = FaceLandmark[i].y;
             }
 
             var byteArray = new byte[floatArray.Length * 4 + 1];
-            byteArray[0] = MEDIATYPE;
+            byteArray[0] = (byte)MediaCondition;
             Buffer.BlockCopy(floatArray, 0, byteArray, 1, byteArray.Length - 1);
 
             return byteArray;
