@@ -32,9 +32,13 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             MainContext = SynchronizationContext.Current;
         }
 
-        public void SetUDP(string localadress, string remoteadress, bool remoteFlg = true)
+        public void SetUDP(string localadress, string remoteadress)
         {
-            RemoteFlg = remoteFlg;
+            RemoteFlg = true;
+            if (UdpSystem != null)
+            {
+                UdpSystem.Finish();
+            }
 
             var localipport = localadress.Split(':');
             var remoteipport = remoteadress.Split(':');
@@ -47,6 +51,15 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             UdpSystem = new UDPSystem((x) => Receive(x));
             UdpSystem.Set(localip, localport, remoteip, remoteport);
             UdpSystem.Receive();
+        }
+
+        public void FinishUDP()
+        {
+            RemoteFlg = false;
+            if (UdpSystem != null)
+            {
+                UdpSystem.Finish();
+            }
         }
 
         public void Receive(byte[] data)
@@ -70,8 +83,8 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
                     OnReceive?.Invoke(new AgentMediaData(data));
                     break;
                 case MediaCondition.F:
-                    //LatestVideoData = new VideoMediaData(data);
-                    OnReceive?.Invoke(new VideoMediaData(data));
+                    var videoData = new VideoMediaData(data);
+                    OnReceive?.Invoke(videoData);
                     break;
                 default:
                     LatestGazeData = new GazeMediaData(data);

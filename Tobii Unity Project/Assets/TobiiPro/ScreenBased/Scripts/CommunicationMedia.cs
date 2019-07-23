@@ -113,7 +113,7 @@ public class CommunicationMedia : MonoBehaviour
 
     private DataExchangeSystem dataExchangeSystem;
 
-    float Alpha = 0.3f;
+    int Alpha = 100;
 
     /// <summary>
     /// The texture.
@@ -130,8 +130,6 @@ public class CommunicationMedia : MonoBehaviour
     /// The instance of eye tracker.
     /// </summary>
     EyeTracker eyeTracker;
-
-    RawImage rawImage;
 
     private IGazeData lastGazePoint = new GazeData();
 
@@ -150,31 +148,8 @@ public class CommunicationMedia : MonoBehaviour
     {
         fpsMonitor = GetComponent<FpsMonitor>();
         eyeTracker = EyeTracker.Instance;
-        rawImage = GameObject.Find("RawImage").GetComponent<RawImage>();
         agent = new Agent(requestedWidth, requestedHeight);
         gazePlotter = GameObject.Find("[GazePlot]").GetComponent<GazePlotter>();
-
-        var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
-        conditionSettings.OnConditionChange += (media, curser) =>
-        {
-            switch (media)
-            {
-                case MediaCondition.A:
-                    rawImage.texture = null;
-                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
-                    break;
-                case MediaCondition.F:
-                    rawImage.texture = webCamTexture;
-                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, Alpha);
-                    break;
-                default:
-                    rawImage.texture = null;
-                    rawImage.color = new Color(rawImage.color.r, rawImage.color.g, rawImage.color.b, 0);
-                    break;
-            }
-
-        };
-
 
         //adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
 
@@ -383,7 +358,6 @@ public class CommunicationMedia : MonoBehaviour
         var myIpAddr = ScanIPAddr.IP[0];
         var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
         myIP.text = myIpAddr + ":5000";
-        
 
         gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
         Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
@@ -426,6 +400,13 @@ public class CommunicationMedia : MonoBehaviour
                 agent.DrawAgent(texture, agentData.FaceLandmark, screenPos);
                 break;
             case MediaCondition.F:
+                var videoData = data as VideoMediaData;
+                for (var i = 0; i < videoData.Colors.Length; i++)
+                {
+                    videoData.Colors[i].a = (byte)Alpha;
+                }
+                texture.SetPixels32(videoData.Colors);
+                texture.Apply(false);
                 break;
             default:
                 break;
@@ -436,8 +417,16 @@ public class CommunicationMedia : MonoBehaviour
     {
         var local = GameObject.Find("MyIP").GetComponent<InputField>();
         var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
-        
-        dataExchangeSystem.SetUDP(local.text, remote.text);
+
+        if (string.IsNullOrEmpty(local.text) || string.IsNullOrEmpty(remote.text))
+        {
+            dataExchangeSystem.FinishUDP();
+        }
+        else
+        {
+            dataExchangeSystem.SetUDP(local.text, remote.text);
+        }
+
     }
 
     // Update is called once per frame
@@ -459,27 +448,31 @@ public class CommunicationMedia : MonoBehaviour
 
         gazePlotter.UpdateGazePlotter(texture.width, texture.height);
 
-        if (ConditionSettings.MediaCondition == MediaCondition.A)
+        if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
         {
-            if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
+            Color32[] colors = GetColors();
+
+            if (colors != null)
             {
-                Color32[] colors = GetColors();
+                IMediaData mediaData = null;
 
-                if (colors != null)
+                switch (ConditionSettings.MediaCondition)
                 {
-                    var landmarks = agent.GetLandmarkPoints(colors);
-
-                    var agentData = new AgentMediaData(landmarks);
-         
-                    dataExchangeSystem.Post(agentData);
+                    case MediaCondition.A:
+                        var landmarks = agent.GetLandmarkPoints(colors);
+                        mediaData = new AgentMediaData(landmarks);
+                        dataExchangeSystem.Post(mediaData);
+                        break;
+                    case MediaCondition.F:
+                        mediaData = new VideoMediaData(colors);
+                        dataExchangeSystem.Post(mediaData);
+                        break;
+                    case MediaCondition.N:
+                        break;
                 }
             }
         }
-        else
-        {
-            texture.SetPixels32(new Color32[texture.width * texture.height]);
-            texture.Apply(false);
-        }
+
     }
 
     private Vector2 ToScreenPos(Vector3 gazePos)

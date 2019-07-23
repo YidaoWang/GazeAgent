@@ -81,6 +81,7 @@ namespace Assets.UDP
         }
         public void Finish() //エラー時チェック項目 : Close()が2度目ではないか
         {
+            if (udpClientSend != null) udpClientSend.Close();
             if (tmpReceiver != null) tmpReceiver.Close();
             else finishFlag = true;
         }
@@ -171,8 +172,10 @@ namespace Assets.UDP
             string targetIP = remoteIP;
             int port = remotePort;
 
-            if (udpClientSend == null) udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
-
+            if (udpClientSend == null)
+            {
+                udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
+            }
             udpClientSend.EnableBroadcast = true;
             Socket uSocket = udpClientSend.Client;
             uSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
