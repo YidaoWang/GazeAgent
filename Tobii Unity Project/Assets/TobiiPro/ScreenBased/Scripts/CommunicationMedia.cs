@@ -432,7 +432,15 @@ public class CommunicationMedia : MonoBehaviour
         var local = GameObject.Find("MyIP").GetComponent<InputField>();
         var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
         
-        dataExchangeSystem.SetUDP(local.text, remote.text);
+        if(string.IsNullOrEmpty(local.text) || string.IsNullOrEmpty(remote.text))
+        {
+            dataExchangeSystem.FinishUDP();
+        }
+        else
+        {
+            dataExchangeSystem.SetUDP(local.text, remote.text);
+        }
+      
     }
 
     // Update is called once per frame
