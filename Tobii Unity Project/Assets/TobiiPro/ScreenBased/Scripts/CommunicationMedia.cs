@@ -113,7 +113,7 @@ public class CommunicationMedia : MonoBehaviour
 
     private DataExchangeSystem dataExchangeSystem;
 
-    int Alpha = 100;
+    byte Alpha = 100;
 
     /// <summary>
     /// The texture.
@@ -396,11 +396,7 @@ public class CommunicationMedia : MonoBehaviour
                 break;
             case MediaCondition.F:
                 var videoData = data as VideoMediaData;
-                for (var i = 0; i < videoData.Colors.Length; i++)
-                {
-                    videoData.Colors[i].a = (byte)Alpha;
-                }
-                texture.SetPixels32(videoData.Colors);
+                texture.SetPixels32(videoData.GetPixels32(Alpha));
                 texture.Apply(false);
                 break;
             default:
