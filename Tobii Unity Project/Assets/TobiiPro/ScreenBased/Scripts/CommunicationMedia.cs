@@ -391,7 +391,12 @@ public class CommunicationMedia : MonoBehaviour
         {
             case MediaCondition.A:
                 var agentData = data as AgentMediaData;
-                var screenPos = ToScreenPos(dataExchangeSystem.LatestGazeData.GazePoint);
+
+                Vector2 screenPos = new Vector2();
+                if (dataExchangeSystem.LatestGazeData != null)
+                {
+                    screenPos = ToScreenPos(dataExchangeSystem.LatestGazeData.GazePoint);
+                }            
                 agent.DrawAgent(texture, agentData.FaceLandmark, screenPos);
                 break;
             case MediaCondition.F:
