@@ -386,17 +386,16 @@ public class CommunicationMedia : MonoBehaviour
 
     public void RenderingReceivedData(IMediaData data)
     {
-        if (dataExchangeSystem.LatestGazeData == null) return;
         switch (data.MediaCondition)
         {
             case MediaCondition.A:
                 var agentData = data as AgentMediaData;
 
-                Vector2 screenPos = new Vector2();
+                Vector2 screenPos = new Vector2(texture.width/2, texture.height/2);
                 if (dataExchangeSystem.LatestGazeData != null)
                 {
                     screenPos = ToScreenPos(dataExchangeSystem.LatestGazeData.GazePoint);
-                }            
+                }
                 agent.DrawAgent(texture, agentData.FaceLandmark, screenPos);
                 break;
             case MediaCondition.F:
@@ -447,7 +446,6 @@ public class CommunicationMedia : MonoBehaviour
         if (hasInitDone && webCamTexture.isPlaying && webCamTexture.didUpdateThisFrame)
         {
             Color32[] colors = GetColors();
-
             if (colors != null)
             {
                 IMediaData mediaData = null;
@@ -460,7 +458,7 @@ public class CommunicationMedia : MonoBehaviour
                         dataExchangeSystem.Post(mediaData);
                         break;
                     case MediaCondition.F:
-                        mediaData = new VideoMediaData(colors);
+                        mediaData = new VideoMediaData(colors, texture.width, texture.height);
                         dataExchangeSystem.Post(mediaData);
                         break;
                     case MediaCondition.N:

@@ -76,12 +76,10 @@ namespace Tobii.Research.Unity
                 && gazeData.TimeStamp > (_lastGazeData.TimeStamp + float.Epsilon))
             {
                 var gazepoint = GetGazePointdata(gazeData);
-                //var screenPos = ToScreenPos(gazepoint, texture_width, texture_height); 
                 dataExchangeSystem.Post(new GazeMediaData(gazepoint));
 
                 _lastGazeData = gazeData;
             }
-            GazeBubbleRenderer.enabled = true;
         }
 
         public Vector2 ToScreenPos(Vector3 gazePos, float texture_width, float texture_height)

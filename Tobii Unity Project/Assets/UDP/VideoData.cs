@@ -12,46 +12,21 @@ namespace Assets.UDP
     {
         public MediaCondition MediaCondition => MediaCondition.F;
 
-        const int jpg_width = 640;
-        const int jpg_height = 480;
+        const int JPG_QUALITY = 25;
 
-        public VideoMediaData(Color32[] colors)
+        public VideoMediaData(Color32[] colors, int width, int height)
         {
-            Texture = new Texture2D(jpg_width, jpg_height);
+            Texture = new Texture2D(width, height);
             Texture.SetPixels32(colors);
             Texture.Apply(false);
         }
 
         public VideoMediaData(byte[] data)
         {
-            #region レガシー
-            //if(data[0] != (byte)MediaCondition)
-            //{
-            //    return;
-            //}
-            //int lengthOfColor32 = Marshal.SizeOf(typeof(Color32));
-            //int length = (data.Length - 1)/ lengthOfColor32;
-            //Colors = new Color32[length];
-
-            //GCHandle handle = default(GCHandle);
-            //try
-            //{
-            //    handle = GCHandle.Alloc(Colors, GCHandleType.Pinned);
-            //    IntPtr ptr = handle.AddrOfPinnedObject();
-            //    Marshal.Copy(data, 1, ptr, data.Length - 1);
-            //}
-            //finally
-            //{
-            //    if (handle.IsAllocated)
-            //        handle.Free();
-            //}
-            #endregion
-            //PrintBytes(data, 1000);
-
             var jpg = new byte[data.Length - 1];
             Array.Copy(data, 1, jpg, 0, jpg.Length);
 
-            Texture = new Texture2D(jpg_width, jpg_height);
+            Texture = new Texture2D(1, 1);
             Texture.LoadImage(jpg);
         }
 
@@ -69,35 +44,14 @@ namespace Assets.UDP
 
         public byte[] ToBytes()
         {
-            #region レガシー
-            //if (Colors == null || Colors.Length == 0)
-            //    return null;
+            var jpg = Texture.EncodeToJPG(JPG_QUALITY);
+            //Debug.Log("jpg:" + jpg.Length);
 
-            //int lengthOfColor32 = Marshal.SizeOf(typeof(Color32));
-            //int length = lengthOfColor32 * Colors.Length;
-            //byte[] bytes = new byte[length + 1];
-            //bytes[0] = (byte)MediaCondition;
-
-            //GCHandle handle = default(GCHandle);
-            //try
-            //{
-            //    handle = GCHandle.Alloc(Colors, GCHandleType.Pinned);
-            //    IntPtr ptr = handle.AddrOfPinnedObject();
-            //    Marshal.Copy(ptr, bytes, 1, length);
-            //}
-            //finally
-            //{
-            //    if (handle != default(GCHandle))
-            //        handle.Free();
-            //}
-            #endregion
-
-            var jpg = Texture.EncodeToJPG();
             var data = new byte[jpg.Length + 1];
 
             data[0] = (byte)MediaCondition;
             Array.Copy(jpg, 0, data, 1, jpg.Length);
-            
+
             return data;
         }
 
