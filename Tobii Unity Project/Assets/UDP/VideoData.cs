@@ -12,7 +12,7 @@ namespace Assets.UDP
     {
         public MediaCondition MediaCondition => MediaCondition.F;
 
-        const int JPG_QUALITY = 25;
+        const int JPG_QUALITY = 20;
 
         public VideoMediaData(Color32[] colors, int width, int height)
         {
@@ -45,7 +45,6 @@ namespace Assets.UDP
         public byte[] ToBytes()
         {
             var jpg = Texture.EncodeToJPG(JPG_QUALITY);
-            //Debug.Log("jpg:" + jpg.Length);
 
             var data = new byte[jpg.Length + 1];
 

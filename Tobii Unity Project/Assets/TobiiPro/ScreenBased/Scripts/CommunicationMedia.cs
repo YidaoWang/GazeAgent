@@ -26,13 +26,13 @@ public class CommunicationMedia : MonoBehaviour
     /// Set the width of WebCamTexture.
     /// </summary>
     [SerializeField, TooltipAttribute("Set the width of WebCamTexture.")]
-    public int requestedWidth = 640;
+    public int requestedWidth = 800;
 
     /// <summary>
     /// Set the height of WebCamTexture.
     /// </summary>
     [SerializeField, TooltipAttribute("Set the height of WebCamTexture.")]
-    public int requestedHeight = 480;
+    public int requestedHeight = 600;
 
     /// <summary>
     /// Set FPS of WebCamTexture.

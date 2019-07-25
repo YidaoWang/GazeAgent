@@ -27,9 +27,14 @@ namespace DlibFaceLandmarkDetectorExample
         /// </summary>
         FaceLandmarkDetector faceLandmarkDetector;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        const float REDUCTION_RATE = 1 / 2.0f;
+
 
         public int Width { get; }
-        public int Height { get;}
+        public int Height { get; }
 
         public Agent(int width, int height)
         {
@@ -57,10 +62,18 @@ namespace DlibFaceLandmarkDetectorExample
 
         }
 
-
         public Vector2[] GetLandmarkPoints(Color32[] colors)
         {
-            faceLandmarkDetector.SetImage<Color32>(colors, Width, Height, 4, true);
+            int r_width = (int)(Width * REDUCTION_RATE);
+            int r_height = (int)(Height * REDUCTION_RATE);
+          
+            var texture = new Texture2D(Width, Height);
+            texture.SetPixels32(colors);
+            texture.Apply();
+
+            ResizeTexture(texture, r_width, r_height);
+
+            faceLandmarkDetector.SetImage<Color32>(texture.GetPixels32(), r_width, r_height, 4, true);
 
             //detect face rects
             List<Rect> detectResult = faceLandmarkDetector.Detect();
@@ -72,13 +85,34 @@ namespace DlibFaceLandmarkDetectorExample
                 var h = (int)rect.height;
 
                 //detect landmark points
-                return faceLandmarkDetector.DetectLandmark(rect).ToArray();
+                var res = faceLandmarkDetector.DetectLandmark(rect).ToArray();
+                for(int i = 0; i < res.Length; i++)
+                {
+                    res[i] /= REDUCTION_RATE;
+                }
+                return res;
             }
 
             return null;
         }
 
-        
+        private static Texture2D ResizeTexture(Texture2D texture, int width, int height)
+        {
+            var rt = RenderTexture.GetTemporary(width, height);
+
+            Graphics.Blit(texture, rt);
+            var preRT = RenderTexture.active;
+            RenderTexture.active = rt;
+            texture.Resize(width, height);
+            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            texture.Apply();
+            RenderTexture.active = preRT;
+
+            RenderTexture.ReleaseTemporary(rt);
+
+            return texture;
+        }
+
 
         public void DrawAgent(Texture2D texture, Vector2[] landmarkPoints, Vector2 gazePoint)
         {
