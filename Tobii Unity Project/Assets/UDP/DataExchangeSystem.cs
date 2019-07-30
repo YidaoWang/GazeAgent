@@ -90,9 +90,12 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
                     var videoData = new VideoMediaData(data);
                     OnReceive?.Invoke(videoData);
                     break;
-                default:
+                case MediaCondition.N:
                     LatestGazeData = new GazeMediaData(data);
                     OnReceive?.Invoke(LatestGazeData);
+                    break;
+                default:
+
                     break;
             }
         }

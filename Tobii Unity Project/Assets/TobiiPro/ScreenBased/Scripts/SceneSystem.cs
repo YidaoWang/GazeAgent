@@ -20,6 +20,12 @@ public class SceneSystem : MonoBehaviour
         }
         local.ClearOptions();
         local.AddOptions(ips.OfType<string>().ToList());
+
+        var repeatNumber = GameObject.Find("RepeatNumber").GetComponent<InputField>();
+        var experimentOrder = GameObject.Find("ExperimentOrder").GetComponent<InputField>();
+
+        repeatNumber.text = "5";
+        experimentOrder.text = "123456";
     }
 
     // Update is called once per frame

@@ -5,12 +5,12 @@ using UnityEngine;
 
 public enum MediaCondition
 {
-    A = 0, F = 1, N = 2
+    A = 0, F = 1, N = 2, Other = 255,
 }
 
 public enum CursorCondition
 {
-    C = 0, N = 1
+    C = 0, N = 1, Other = 255
 }
 
 public class ConditionSettings : MonoBehaviour
