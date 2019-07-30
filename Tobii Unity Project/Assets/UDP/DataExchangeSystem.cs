@@ -30,6 +30,10 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
         {
             RemoteFlg = false;
             MainContext = SynchronizationContext.Current;
+            if (ExperimentSettings.RemoteFlg)
+            {
+                SetUDP(ExperimentSettings.LocalAdress, ExperimentSettings.RemoteAdress);
+            }
         }
 
         public void SetUDP(string localadress, string remoteadress)

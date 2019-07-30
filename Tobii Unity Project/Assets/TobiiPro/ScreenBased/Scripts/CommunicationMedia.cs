@@ -148,7 +148,6 @@ public class CommunicationMedia : MonoBehaviour
     {
         fpsMonitor = GetComponent<FpsMonitor>();
         eyeTracker = EyeTracker.Instance;
-        agent = new Agent(requestedWidth, requestedHeight);
         gazePlotter = GameObject.Find("[GazePlot]").GetComponent<GazePlotter>();
 
         //adjustPixelsDirectionToggle.isOn = adjustPixelsDirection;
@@ -260,6 +259,8 @@ public class CommunicationMedia : MonoBehaviour
         // Starts the camera
         webCamTexture.Play();
 
+        agent = new Agent(webCamTexture.width, webCamTexture.height);
+
         while (true)
         {
             //If you want to use webcamTexture.width and webcamTexture.height on iOS, you have to wait until webcamTexture.didUpdateThisFrame == 1, otherwise these two values will be equal to 16. (http://forum.unity3d.com/threads/webcamtexture-and-error-0x0502.123922/)
@@ -354,10 +355,11 @@ public class CommunicationMedia : MonoBehaviour
 
         dataExchangeSystem.OnReceive += RenderingReceivedData;
 
-
-        var myIpAddr = ScanIPAddr.IP[0];
+        
         var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
-        myIP.text = myIpAddr + ":5000";
+        var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
+        myIP.text = ExperimentSettings.LocalAdress;
+        remote.text = ExperimentSettings.RemoteAdress;
 
         gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
         Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
