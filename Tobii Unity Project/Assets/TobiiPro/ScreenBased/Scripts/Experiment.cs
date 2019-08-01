@@ -18,6 +18,7 @@ public enum ExperimentType
 public class Experiment
 {
     public ExperimentType ExperimentType { get; set; }
+    public int Number { get; set; }
     public string Respondent { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime ResponseTime { get; set; }
@@ -26,9 +27,10 @@ public class Experiment
     public bool CorrectAnswer { get; set; }
     public bool Answer { get; set; }
 
-    public Experiment(ExperimentType experimentType, string imagePath, bool correctAnswer)
+    public Experiment(ExperimentType experimentType, int number, string imagePath, bool correctAnswer)
     {
         ExperimentType = experimentType;
+        Number = number;
         ImageFile = imagePath;
         CorrectAnswer = correctAnswer;
     }

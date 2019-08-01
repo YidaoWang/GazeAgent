@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -11,6 +12,8 @@ using UnityEngine.UI;
 public class SceneSystem : MonoBehaviour
 {
     private UDPSystem UdpSystem;
+
+    private Timer Timer;
 
     // Start is called before the first frame update
     void Start()
@@ -46,16 +49,33 @@ public class SceneSystem : MonoBehaviour
 
     public void StartAsServer()
     {
-        if(LoadConnection() && LoadExperiment())
+        if (LoadConnection() && LoadExperiment())
         {
             SetExperimentList();
 
             SetUDP(data =>
             {
-
+                if (data[0] != (byte)CommandType.Text) return;
+                var res = new TextCommand(data);
+                if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
+                {
+                    Timer?.Stop();
+                    UdpSystem.Finish();
+                    ExperimentSettings.RemoteFlg = true;
+                    SceneManager.LoadScene("MainScene");
+                }
             });
+
+            var setting = new SettingCommand(ExperimentSettings.ExperimentOrder, ExperimentSettings.RepeatNumber);
+
+            Timer = new Timer(1000);
+            Timer.Elapsed += (sender, e) =>
+            {
+                UdpSystem.Send_NonAsync2(setting.ToBytes());
+            };
+            Timer.Start();
         }
-     
+
     }
 
     public void StartAsClient()
@@ -63,7 +83,15 @@ public class SceneSystem : MonoBehaviour
         LoadConnection();
         SetUDP(data =>
         {
-
+            if (data[0] != (byte)CommandType.Setting) return;
+            var setting = new SettingCommand(data);
+            ExperimentSettings.ExperimentOrder = setting.ExperimentOrder;
+            ExperimentSettings.RepeatNumber = setting.RepeatNumber;
+            var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
+            UdpSystem.Send_NonAsync2(res.ToBytes());
+            UdpSystem.Finish();
+            ExperimentSettings.RemoteFlg = true;
+            SceneManager.LoadScene("MainScene");
         });
     }
 
@@ -81,7 +109,7 @@ public class SceneSystem : MonoBehaviour
         var local = GameObject.Find("MyIP").GetComponent<Dropdown>();
         var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
 
-        if(remote.text != null)
+        if (remote.text != null)
         {
             ExperimentSettings.RemoteFlg = true;
             ExperimentSettings.LocalAdress = local.options[local.value].text;
@@ -164,7 +192,7 @@ public class SceneSystem : MonoBehaviour
                         break;
                 }
                 imgs[rand]++;
-                experimentList.Add(new Experiment(et, imgPath, ca));
+                experimentList.Add(new Experiment(et, i, imgPath, ca));
             }
         }
 

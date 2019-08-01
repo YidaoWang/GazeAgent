@@ -10,7 +10,7 @@ namespace Assets.UDP
     {
         Setting = 1,
         Next = 2,
-        Responce = 0
+        Text = 0
     }
 
     interface ICommandData

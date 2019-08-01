@@ -10,8 +10,8 @@ namespace Assets.UDP
     {
         public CommandType CommandType => CommandType.Setting;
 
-        public static int[] ExperimentOrder { get; set; }
-        public static int RepeatNumber { get; set; }
+        public int[] ExperimentOrder { get; set; }
+        public int RepeatNumber { get; set; }
 
         public SettingCommand(int[] experimentOrder, int repeatNumber)
         {
