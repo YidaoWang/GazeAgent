@@ -12,9 +12,6 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 {
     public class DataExchangeSystem : MonoBehaviour
     {
-        [SerializeField, TooltipAttribute("Set remote condition.")]
-        public bool RemoteFlg;
-
         public SynchronizationContext MainContext { get; private set; }
 
         public UDPSystem UdpSystem { get; set; }
@@ -23,34 +20,27 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
         public event OnReceiveEventHandler OnReceive;
 
         public GazeMediaData LatestGazeData { get; set; }
-        //public AgentMediaData LatestAgentData { get; set; }
-        //public VideoMediaData LatestVideoData { get; set; }
 
         void Start()
         {
-            RemoteFlg = false;
             MainContext = SynchronizationContext.Current;
             if (ExperimentSettings.RemoteFlg)
             {
-                SetUDP(ExperimentSettings.LocalAdress, ExperimentSettings.RemoteAdress);
+                SetUDP();
             }
         }
 
-        public void SetUDP(string localadress, string remoteadress)
+        public void SetUDP()
         {
-            RemoteFlg = true;
             if (UdpSystem != null)
             {
                 UdpSystem.Finish();
             }
 
-            var localipport = localadress.Split(':');
-            var remoteipport = remoteadress.Split(':');
-
-            var localip = localipport[0];
-            var localport = int.Parse(localipport[1]);
-            var remoteip = remoteipport[0];
-            var remoteport = int.Parse(remoteipport[1]);
+            var localip = ExperimentSettings.LocalAdress;
+            var localport = ExperimentSettings.DataPort;
+            var remoteip = ExperimentSettings.RemoteAdress;
+            var remoteport = ExperimentSettings.DataPort;
 
             UdpSystem = new UDPSystem((x) => Receive(x));
             UdpSystem.Set(localip, localport, remoteip, remoteport);
@@ -59,7 +49,6 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         public void FinishUDP()
         {
-            RemoteFlg = false;
             if (UdpSystem != null)
             {
                 UdpSystem.Finish();
@@ -102,7 +91,7 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         public void Post(IMediaData data)
         {
-            if (!RemoteFlg)
+            if (!ExperimentSettings.RemoteFlg)
             {
                 ReceiveOnMainContext(data.ToBytes());
             }

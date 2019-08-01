@@ -358,10 +358,10 @@ public class CommunicationMedia : MonoBehaviour
         var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         conditionSettings.OnConditionChange += OnConditionChange;
 
-        var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
-        var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
-        myIP.text = ExperimentSettings.LocalAdress;
-        remote.text = ExperimentSettings.RemoteAdress;
+        //var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
+        //var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
+        //myIP.text = ExperimentSettings.LocalAdress;
+        //remote.text = ExperimentSettings.RemoteAdress;
 
         gameObject.transform.localScale = new Vector3(texture.width, texture.height, 1);
         Debug.Log("Screen.width " + Screen.width + " Screen.height " + Screen.height + " Screen.orientation " + Screen.orientation);
@@ -432,21 +432,21 @@ public class CommunicationMedia : MonoBehaviour
         }
     }
 
-    public void Connect()
-    {
-        var local = GameObject.Find("MyIP").GetComponent<InputField>();
-        var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
+    //public void Connect()
+    //{
+    //    var local = GameObject.Find("MyIP").GetComponent<InputField>();
+    //    var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
 
-        if (string.IsNullOrEmpty(local.text) || string.IsNullOrEmpty(remote.text))
-        {
-            dataExchangeSystem.FinishUDP();
-        }
-        else
-        {
-            dataExchangeSystem.SetUDP(local.text, remote.text);
-        }
+    //    if (string.IsNullOrEmpty(local.text) || string.IsNullOrEmpty(remote.text))
+    //    {
+    //        dataExchangeSystem.FinishUDP();
+    //    }
+    //    else
+    //    {
+    //        dataExchangeSystem.SetUDP();
+    //    }
 
-    }
+    //}
 
     // Update is called once per frame
     void Update()
