@@ -26,7 +26,9 @@ public class SceneSystem : MonoBehaviour
 
         var repeatNumber = GameObject.Find("RepeatNumber").GetComponent<InputField>();
         var experimentOrder = GameObject.Find("ExperimentOrder").GetComponent<InputField>();
+        var remoteIP = GameObject.Find("RemoteIP").GetComponent<InputField>();
 
+        remoteIP.text = "136.187.82.0";
         repeatNumber.text = "5";
         experimentOrder.text = "123456";
     }
@@ -83,13 +85,18 @@ public class SceneSystem : MonoBehaviour
         LoadConnection();
         SetUDP(data =>
         {
+            Debug.Log("receipt" + data[0]);
             if (data[0] != (byte)CommandType.Setting) return;
+            Debug.Log(1);
             var setting = new SettingCommand(data);
+            Debug.Log(2);
             ExperimentSettings.ExperimentOrder = setting.ExperimentOrder;
             ExperimentSettings.RepeatNumber = setting.RepeatNumber;
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
+            Debug.Log(3);
             UdpSystem.Send_NonAsync2(res.ToBytes());
             UdpSystem.Finish();
+            Debug.Log(4);
             ExperimentSettings.RemoteFlg = true;
             SceneManager.LoadScene("MainScene");
         });
