@@ -355,7 +355,9 @@ public class CommunicationMedia : MonoBehaviour
 
         dataExchangeSystem.OnReceive += RenderingReceivedData;
 
-        
+        var conditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+        conditionSettings.OnConditionChange += OnConditionChange;
+
         var myIP = GameObject.Find("MyIP").GetComponent<InputField>();
         var remote = GameObject.Find("RemoteIP").GetComponent<InputField>();
         myIP.text = ExperimentSettings.LocalAdress;
@@ -386,7 +388,27 @@ public class CommunicationMedia : MonoBehaviour
         }
     }
 
-    public void RenderingReceivedData(IMediaData data)
+    private void OnConditionChange(MediaCondition media, CursorCondition cursor)
+    {
+        switch (media)
+        {
+            case MediaCondition.A:
+                break;
+            case MediaCondition.F:
+                break;
+            case MediaCondition.N:
+                var pixels = texture.GetPixels32();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i].a = 0;
+                }
+                texture.SetPixels32(pixels);
+                texture.Apply(false);
+                break;
+        }
+    }
+
+    private void RenderingReceivedData(IMediaData data)
     {
         switch (data.MediaCondition)
         {
