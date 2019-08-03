@@ -34,7 +34,7 @@ namespace Assets.UDP
         int sendHostPort = 6001;
         int sendHostPortRange = 0;
 
-        Action<byte[]> callBack;
+        public Action<byte[]> CallBack;
 
 
         public string localIP, remoteIP;
@@ -45,7 +45,7 @@ namespace Assets.UDP
 
         public UDPSystem(Action<byte[]> callback)
         {
-            callBack = callback;
+            CallBack = callback;
 
         }
         public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
@@ -56,7 +56,7 @@ namespace Assets.UDP
             remoteIP = remote_ip;
             localPort = localport;
             remotePort = remoteport;
-            callBack = callback;
+            CallBack = callback;
             onlyFlag = onlyflag;
         }
 
@@ -66,7 +66,7 @@ namespace Assets.UDP
             remoteIP = remote_ip;
             localPort = localport;
             remotePort = remoteport;
-            if (callback != null) callBack = callback;
+            if (callback != null) CallBack = callback;
         }
         public void SetSendHostPort(int port, int portRange = 0) //送信用 自己ポート設定
         {
@@ -123,7 +123,7 @@ namespace Assets.UDP
             try
             { //受信成功時アクション
                 getByte = getUdp.EndReceive(res, ref ipEnd);
-                callBack?.Invoke(getByte);
+                CallBack?.Invoke(getByte);
             }
             catch (SocketException ex)
             {

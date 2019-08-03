@@ -3,6 +3,7 @@ using Assets.IO;
 using Assets.UDP;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Timers;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +12,10 @@ public class ExperimentSystem : MonoBehaviour
 {
     public static List<Experiment> ExperimentList { get; set; }
     public static UDPSystem CommandUDPSystem { get; set; }
+    public GameObject Wall;
 
     public int CurrentIndex { get; private set; }
+
     public Experiment CurrentExperiment
     {
         get
@@ -20,24 +23,96 @@ public class ExperimentSystem : MonoBehaviour
             return ExperimentList[CurrentIndex];
         }
     }
+    public Experiment NextExperiment
+    {
+        get
+        {
+            return ExperimentList[CurrentIndex + 1];
+        }
+    }
+
+    public SynchronizationContext MainContext { get; private set; }
+
 
     void Start()
     {
+        MainContext = SynchronizationContext.Current;
+        Wall = GameObject.Find("Wall");
+
         var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         cs.COnClick();
-        
-        StartExperiment();
+
+        if (ExperimentSettings.RemoteFlg)
+        {
+            CommandUDPSystem.CallBack = OnReceiveCommand;
+            if (ExperimentSettings.ServerFlg)
+            {
+                var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
+                CurrentExperiment.StartTime = nextStartTime;
+                var nextCmd = new NextCommand(-1, false, string.Empty, nextStartTime);
+                CommandUDPSystem.Send_NonAsync2(nextCmd.ToBytes());
+                ScheduleStartExperiment();
+            }
+        }
+        else
+        {
+            var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
+            CurrentExperiment.StartTime = nextStartTime;
+            ScheduleStartExperiment();
+        }
     }
 
+    void OnReceiveCommand(byte[] data)
+    {
+        switch ((CommandType)data[0])
+        {
+            case CommandType.Next:
+                var next = new NextCommand(data);
+                if (next.LastExperimentNumber == -1)
+                {
+                    CurrentExperiment.StartTime = next.NextStartTime;
+                    ScheduleStartExperiment();
+                }
+                else
+                {
+                    // 相手が先に押した場合
+                    var nextExp = ExperimentList[next.LastExperimentNumber + 1];
+                    if (nextExp.StartTime == null || nextExp.StartTime > next.NextStartTime)
+                    {
+                        NextExperiment.StartTime = next.NextStartTime;
+                        Next(ExperimentSettings.RemoteAdress, next.Answer, null);
+                    }
+                    // 自分が先に押した場合
+                    else
+                    {
+                        // do nothing.
+                    }
+                }
+                break;
+        }
+    }
 
-    public void StartExperiment()
+    public void ScheduleStartExperiment()
     {
         var interval = CurrentExperiment.StartTime - DateTime.Now;
-        if(interval > TimeSpan.Zero)
+        if (interval > TimeSpan.Zero)
         {
-            var timer = new Timer(interval.TotalMilliseconds);                            
+            var timer = new System.Timers.Timer(interval.TotalMilliseconds);
+            timer.Elapsed += (s, e) =>
+            {
+                timer.Stop();
+                MainContext.Post(_ =>
+                {
+                    StartExperiment();
+                }, null);
+            };
+            timer.Start();
         }
+    }
 
+    void StartExperiment()
+    {
+        Debug.Log("started");
         var img = GameObject.Find("Canvas/Task").GetComponent<Image>();
 
         var texture = FileManager.LoadPNG(Application.dataPath + CurrentExperiment.ImageFile);
@@ -49,7 +124,7 @@ public class ExperimentSystem : MonoBehaviour
             case ExperimentType.P:
                 cs.COnClick();
                 break;
-            case ExperimentType.A:              
+            case ExperimentType.A:
                 cs.AOnClick();
                 break;
             case ExperimentType.AC:
@@ -69,31 +144,67 @@ public class ExperimentSystem : MonoBehaviour
                 break;
         }
         CurrentExperiment.Start();
+        EnableInputs();
     }
 
     public void OnClickT()
     {
-        Next(true);
+        OnClick(true);
     }
 
     public void OnClickF()
     {
-        Next(false);
+        OnClick(false);
     }
 
-    public void Next(bool answer)
+    void OnClick(bool answer)
     {
-        CurrentExperiment.Finish(ExperimentSettings.LocalAdress, answer, null);
+        DisableInputs();
+        var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
+        NextExperiment.StartTime = nextStartTime;
+        NoticeRemote(answer, nextStartTime);
+        Next(ExperimentSettings.LocalAdress, answer, GetGazeDataFile());
+    }
+
+    void NoticeRemote(bool answer, DateTime nextStartTime)
+    {
+        if (!ExperimentSettings.RemoteFlg) return;
+        var nextCmd = new NextCommand(CurrentIndex, answer, ExperimentSettings.LocalAdress, nextStartTime);
+        CommandUDPSystem.Send_NonAsync2(nextCmd.ToBytes());
+    }
+
+    void Next(string respondent, bool answer, string dazedataFile)
+    {
+        CurrentExperiment.Finish(respondent, answer, dazedataFile);
         CurrentIndex++;
-        if(CurrentIndex >= ExperimentList.Count)
+        if (CurrentIndex >= ExperimentList.Count)
         {
-            // Finish Experiment.
+            FinishExperiment();
         }
         else
         {
-            StartExperiment();
+            ScheduleStartExperiment();
         }
-    } 
+    }
 
+    string GetGazeDataFile()
+    {
+        return null;
+    }
+
+    void DisableInputs()
+    {
+        Wall.SetActive(true);
+    }
+
+    void EnableInputs()
+    {
+        Wall.SetActive(false);
+    }
+
+    void FinishExperiment()
+    {
+
+    }
 }
 

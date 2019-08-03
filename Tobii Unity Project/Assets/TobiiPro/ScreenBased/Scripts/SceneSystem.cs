@@ -70,6 +70,7 @@ public class SceneSystem : MonoBehaviour
                 {
                     Timer?.Stop();
                     ExperimentSettings.RemoteFlg = true;
+                    ExperimentSettings.ServerFlg = true;
                     ExperimentSystem.CommandUDPSystem = UdpSystem;
                     MainContext.Post(_ =>
                     {

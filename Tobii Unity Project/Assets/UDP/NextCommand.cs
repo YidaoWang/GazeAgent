@@ -15,14 +15,15 @@ namespace Assets.UDP
         public string Respondent { get; set; }
         public DateTime NextStartTime { get; set; }
 
-        NextCommand(int lastExperimentNumber, bool answer, string respondent)
+        public NextCommand(int lastExperimentNumber, bool answer, string respondent, DateTime nextStartTime)
         {
             LastExperimentNumber = lastExperimentNumber;
             Answer = answer;
             Respondent = respondent;
+            NextStartTime = nextStartTime;
         }
 
-        NextCommand(byte[] data)
+        public NextCommand(byte[] data)
         {
             using (var stream = new MemoryStream(data))
             {
