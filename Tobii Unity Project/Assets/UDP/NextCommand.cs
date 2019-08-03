@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,27 +11,9 @@ namespace Assets.UDP
     {
         public CommandType CommandType => CommandType.Next;
         public int LastExperimentNumber { get; set; }
-        public bool Answer
-        {
-            get
-            {
-                return _answer != 0;
-            }
-            set
-            {
-                if (value)
-                {
-                    _answer = 1;
-                }
-                else
-                {
-                    _answer = 0;
-                }
-            }
-        }
+        public bool Answer { get; set; }
         public string Respondent { get; set; }
-
-        private byte _answer;
+        public DateTime NextStartTime { get; set; }
 
         NextCommand(int lastExperimentNumber, bool answer, string respondent)
         {
@@ -41,23 +24,31 @@ namespace Assets.UDP
 
         NextCommand(byte[] data)
         {
-            if (data[0] != (byte)CommandType)
-                return;
-            _answer = data[1];
-            LastExperimentNumber = BitConverter.ToInt32(data, 2);
-            Respondent = Encoding.UTF8.GetString(data, 6, data.Length - 6);
+            using (var stream = new MemoryStream(data))
+            {
+                var reader = new BinaryReader(stream, Encoding.UTF8);
+                if (reader.ReadByte() != (byte)CommandType) return;
+                LastExperimentNumber = reader.ReadInt32();
+                Answer = reader.ReadBoolean();
+                var length = reader.ReadInt32();
+                Respondent = new string(reader.ReadChars(length));
+                NextStartTime = new DateTime(reader.ReadInt64());
+            }
         }
 
         public byte[] ToBytes()
         {
-            var intBytes = BitConverter.GetBytes(LastExperimentNumber);
-            var utf8 = Encoding.UTF8.GetBytes(Respondent);
-            var bytes = new byte[2 + intBytes.Length + utf8.Length];
-            bytes[0] = (byte)CommandType;
-            bytes[1] = _answer;
-            intBytes.CopyTo(bytes, 2);
-            utf8.CopyTo(bytes, 6);
-            return bytes;
+            using (var stream = new MemoryStream())
+            {
+                var writer = new BinaryWriter(stream, Encoding.UTF8);
+                writer.Write((byte)CommandType);
+                writer.Write(LastExperimentNumber);
+                writer.Write(Answer);
+                writer.Write(Respondent.Length);
+                writer.Write(Respondent);
+                writer.Write(NextStartTime.ToBinary());
+                return stream.ToArray();
+            }
         }
     }
 }

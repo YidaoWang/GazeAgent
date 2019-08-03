@@ -69,8 +69,8 @@ public class SceneSystem : MonoBehaviour
                 if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
                 {
                     Timer?.Stop();
-                    UdpSystem.Finish();
                     ExperimentSettings.RemoteFlg = true;
+                    ExperimentSystem.CommandUDPSystem = UdpSystem;
                     MainContext.Post(_ =>
                     {
                         SceneManager.LoadScene("MainScene");
@@ -101,11 +101,11 @@ public class SceneSystem : MonoBehaviour
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
             UdpSystem.Send_NonAsync2(res.ToBytes());
             ExperimentSettings.RemoteFlg = true;
+            ExperimentSystem.CommandUDPSystem = UdpSystem;
             MainContext.Post(_ =>
             {
                 SceneManager.LoadScene("MainScene");
             }, null);
-            UdpSystem.Finish();
         });
     }
 

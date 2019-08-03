@@ -25,7 +25,7 @@ namespace Assets.UDP
 
             using (var stream = new MemoryStream(data))
             {
-                var reader = new BinaryReader(stream);
+                var reader = new BinaryReader(stream, Encoding.UTF8);
                 if (reader.ReadByte() != (byte)CommandType)
                     return;
                 var number = reader.ReadInt32();
@@ -33,11 +33,7 @@ namespace Assets.UDP
                 {
                     var type = (ExperimentType)reader.ReadByte();
                     var num = reader.ReadInt32();
-                    Debug.Log(num);
-                    var bytelength = reader.ReadInt32();
-                    Debug.Log(bytelength);
-                    var imgPath = Encoding.UTF8.GetString(reader.ReadBytes(bytelength));
-                    Debug.Log(imgPath);
+                    var imgPath = new string(reader.ReadChars(reader.ReadInt32()));
                     var ca = reader.ReadBoolean();
                     ExperimentList.Add(new Experiment(type, num, imgPath, ca));
                 }
@@ -46,20 +42,20 @@ namespace Assets.UDP
 
         public byte[] ToBytes()
         {
-            var byteList = new List<byte>();
-            byteList.Add((byte)CommandType);
-            var number = BitConverter.GetBytes(ExperimentList.Count);
-            byteList.AddRange(number);
-            foreach(var e in ExperimentList)
+            using (var stream = new MemoryStream())
             {
-                var utf8 = Encoding.UTF8.GetBytes(e.ImageFile);
-                byteList.Add((byte)e.ExperimentType);
-                byteList.AddRange(BitConverter.GetBytes(e.Number));
-                byteList.AddRange(BitConverter.GetBytes(utf8.Length));
-                byteList.AddRange(utf8);
-                byteList.AddRange(BitConverter.GetBytes(e.CorrectAnswer));
+                var writer = new StreamWriter(stream, Encoding.UTF8);
+                writer.Write(ExperimentList.Count);
+                foreach (var e in ExperimentList)
+                {
+                    writer.Write((byte)e.ExperimentType);
+                    writer.Write(e.Number);
+                    writer.Write(e.ImageFile.Length);
+                    writer.Write(e.ImageFile);
+                    writer.Write(e.CorrectAnswer);
+                }
+                return stream.ToArray();
             }
-            return byteList.ToArray();
         }
     }
 }
