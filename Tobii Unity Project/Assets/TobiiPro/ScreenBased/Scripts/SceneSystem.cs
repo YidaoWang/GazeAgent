@@ -79,7 +79,6 @@ public class SceneSystem : MonoBehaviour
             });
 
             var setting = new SettingCommand(ExperimentSystem.ExperimentList);
-
             Timer = new System.Timers.Timer(1000);
             Timer.Elapsed += (sender, e) =>
             {
@@ -98,14 +97,15 @@ public class SceneSystem : MonoBehaviour
             Debug.Log("receipt" + data[0]);
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
+            ExperimentSystem.ExperimentList = setting.ExperimentList;
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
             UdpSystem.Send_NonAsync2(res.ToBytes());
-            UdpSystem.Finish();
             ExperimentSettings.RemoteFlg = true;
             MainContext.Post(_ =>
             {
                 SceneManager.LoadScene("MainScene");
-            }, null);        
+            }, null);
+            UdpSystem.Finish();
         });
     }
 
@@ -186,7 +186,7 @@ public class SceneSystem : MonoBehaviour
             for (var i = 0; i < RepeatNumber; i++)
             {
                 var rand = r.Next(4);
-                var imgPath = Application.dataPath + "/images";
+                var imgPath = "/images";
                 var ca = false;
                 switch (rand)
                 {

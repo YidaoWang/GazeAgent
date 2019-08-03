@@ -25,7 +25,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         var img = GameObject.Find("Canvas/Task").GetComponent<Image>();
 
-        var texture = FileManager.LoadPNG(CurrentExperiment.ImageFile);
+        var texture = FileManager.LoadPNG(Application.dataPath + CurrentExperiment.ImageFile);
         img.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
 
         var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();

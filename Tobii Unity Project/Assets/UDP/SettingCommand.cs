@@ -21,19 +21,23 @@ namespace Assets.UDP
 
         public SettingCommand(byte[] data)
         {
-            ExperimentList = new List<Experiment>(); 
+            ExperimentList = new List<Experiment>();
+
             using (var stream = new MemoryStream(data))
             {
                 var reader = new BinaryReader(stream);
                 if (reader.ReadByte() != (byte)CommandType)
                     return;
-                var number = reader.Read();
-                for(var i = 0; i < number; i++)
+                var number = reader.ReadInt32();
+                for (var i = 0; i < number; i++)
                 {
                     var type = (ExperimentType)reader.ReadByte();
-                    var num = reader.Read();
-                    var bytelength = reader.Read();
+                    var num = reader.ReadInt32();
+                    Debug.Log(num);
+                    var bytelength = reader.ReadInt32();
+                    Debug.Log(bytelength);
                     var imgPath = Encoding.UTF8.GetString(reader.ReadBytes(bytelength));
+                    Debug.Log(imgPath);
                     var ca = reader.ReadBoolean();
                     ExperimentList.Add(new Experiment(type, num, imgPath, ca));
                 }
