@@ -15,6 +15,8 @@ public class SceneSystem : MonoBehaviour
     private UDPSystem UdpSystem;
 
     private System.Timers.Timer Timer;
+    private int[] ExperimentOrder;
+    private int RepeatNumber;
 
     public SynchronizationContext MainContext { get; private set; }
 
@@ -76,7 +78,7 @@ public class SceneSystem : MonoBehaviour
                 }
             });
 
-            var setting = new SettingCommand(ExperimentSettings.ExperimentOrder, ExperimentSettings.RepeatNumber);
+            var setting = new SettingCommand(ExperimentSystem.ExperimentList);
 
             Timer = new System.Timers.Timer(1000);
             Timer.Elapsed += (sender, e) =>
@@ -96,8 +98,6 @@ public class SceneSystem : MonoBehaviour
             Debug.Log("receipt" + data[0]);
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
-            ExperimentSettings.ExperimentOrder = setting.ExperimentOrder;
-            ExperimentSettings.RepeatNumber = setting.RepeatNumber;
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
             UdpSystem.Send_NonAsync2(res.ToBytes());
             UdpSystem.Finish();
@@ -146,12 +146,12 @@ public class SceneSystem : MonoBehaviour
         }
         else
         {
-            ExperimentSettings.ExperimentOrder = new int[6];
+            ExperimentOrder = new int[6];
             for (int i = 0; i < 6; i++)
             {
-                ExperimentSettings.ExperimentOrder[i] = experimentOrder[i] - '0';
+                ExperimentOrder[i] = experimentOrder[i] - '0';
             }
-            ExperimentSettings.RepeatNumber = int.Parse(repeatNumber);
+            RepeatNumber = int.Parse(repeatNumber);
             return true;
         }
     }
@@ -180,10 +180,10 @@ public class SceneSystem : MonoBehaviour
         var imgs = new int[4];
         System.Random r = new System.Random();
 
-        foreach (ExperimentType et in ExperimentSettings.ExperimentOrder)
+        foreach (ExperimentType et in ExperimentOrder)
         {
             print(et);
-            for (var i = 0; i < ExperimentSettings.RepeatNumber; i++)
+            for (var i = 0; i < RepeatNumber; i++)
             {
                 var rand = r.Next(4);
                 var imgPath = Application.dataPath + "/images";

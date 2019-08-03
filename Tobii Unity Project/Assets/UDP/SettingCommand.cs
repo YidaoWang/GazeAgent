@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,48 +12,50 @@ namespace Assets.UDP
     {
         public CommandType CommandType => CommandType.Setting;
 
-        public int[] ExperimentOrder { get; set; }
-        public int RepeatNumber { get; set; }
+        public List<Experiment> ExperimentList { get; set; }
 
-        public SettingCommand(int[] experimentOrder, int repeatNumber)
+        public SettingCommand(List<Experiment> experimentList)
         {
-            ExperimentOrder = experimentOrder;
-            RepeatNumber = repeatNumber;
+            ExperimentList = experimentList;
         }
 
         public SettingCommand(byte[] data)
         {
-            if (data[0] != (byte)CommandType) return;
-
-            var intArray = new int[(data.Length - 1) / sizeof(int)];
-
-            for(int i = 0; i < intArray.Length; i++)
+            ExperimentList = new List<Experiment>(); 
+            using (var stream = new MemoryStream(data))
             {
-                intArray[i] = BitConverter.ToInt32(data, 1 + i * sizeof(int));
+                var reader = new BinaryReader(stream);
+                if (reader.ReadByte() != (byte)CommandType)
+                    return;
+                var number = reader.Read();
+                for(var i = 0; i < number; i++)
+                {
+                    var type = (ExperimentType)reader.ReadByte();
+                    var num = reader.Read();
+                    var bytelength = reader.Read();
+                    var imgPath = Encoding.UTF8.GetString(reader.ReadBytes(bytelength));
+                    var ca = reader.ReadBoolean();
+                    ExperimentList.Add(new Experiment(type, num, imgPath, ca));
+                }
             }
-
-            RepeatNumber = intArray[0];
-            ExperimentOrder = new int[intArray.Length - 1];
-            Array.Copy(intArray, 1, ExperimentOrder, 0, ExperimentOrder.Length);
         }
 
         public byte[] ToBytes()
         {
-            var intArray = new int[ExperimentOrder.Length + 1];
-            intArray[0] = RepeatNumber;
-            Array.Copy(ExperimentOrder, 0, intArray, 1, ExperimentOrder.Length);
-
-            var byteArray = new byte[intArray.Length * sizeof(int) + 1];
-            byteArray[0] = (byte)CommandType;
-
-            for (int i = 0; i < intArray.Length; i++)
+            var byteList = new List<byte>();
+            byteList.Add((byte)CommandType);
+            var number = BitConverter.GetBytes(ExperimentList.Count);
+            byteList.AddRange(number);
+            foreach(var e in ExperimentList)
             {
-                Array.Copy(BitConverter.GetBytes(intArray[i]), 0, byteArray, 1 + i * sizeof(int), sizeof(int));
+                var utf8 = Encoding.UTF8.GetBytes(e.ImageFile);
+                byteList.Add((byte)e.ExperimentType);
+                byteList.AddRange(BitConverter.GetBytes(e.Number));
+                byteList.AddRange(BitConverter.GetBytes(utf8.Length));
+                byteList.AddRange(utf8);
+                byteList.AddRange(BitConverter.GetBytes(e.CorrectAnswer));
             }
-
-
-
-            return byteArray;
+            return byteList.ToArray();
         }
     }
 }
