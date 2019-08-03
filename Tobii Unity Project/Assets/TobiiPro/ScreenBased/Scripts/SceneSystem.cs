@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Timers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,11 +14,15 @@ public class SceneSystem : MonoBehaviour
 {
     private UDPSystem UdpSystem;
 
-    private Timer Timer;
+    private System.Timers.Timer Timer;
+
+    public SynchronizationContext MainContext { get; private set; }
 
     // Start is called before the first frame update
     void Start()
     {
+        MainContext = SynchronizationContext.Current;
+
         var local = GameObject.Find("MyIP").GetComponent<Dropdown>();
         var ips = ScanIPAddr.IP;
 
@@ -64,13 +69,16 @@ public class SceneSystem : MonoBehaviour
                     Timer?.Stop();
                     UdpSystem.Finish();
                     ExperimentSettings.RemoteFlg = true;
-                    SceneManager.LoadScene("MainScene");
+                    MainContext.Post(_ =>
+                    {
+                        SceneManager.LoadScene("MainScene");
+                    }, null);
                 }
             });
 
             var setting = new SettingCommand(ExperimentSettings.ExperimentOrder, ExperimentSettings.RepeatNumber);
 
-            Timer = new Timer(1000);
+            Timer = new System.Timers.Timer(1000);
             Timer.Elapsed += (sender, e) =>
             {
                 UdpSystem.Send_NonAsync2(setting.ToBytes());
@@ -87,18 +95,17 @@ public class SceneSystem : MonoBehaviour
         {
             Debug.Log("receipt" + data[0]);
             if (data[0] != (byte)CommandType.Setting) return;
-            Debug.Log(1);
             var setting = new SettingCommand(data);
-            Debug.Log(2);
             ExperimentSettings.ExperimentOrder = setting.ExperimentOrder;
             ExperimentSettings.RepeatNumber = setting.RepeatNumber;
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
-            Debug.Log(3);
             UdpSystem.Send_NonAsync2(res.ToBytes());
             UdpSystem.Finish();
-            Debug.Log(4);
             ExperimentSettings.RemoteFlg = true;
-            SceneManager.LoadScene("MainScene");
+            MainContext.Post(_ =>
+            {
+                SceneManager.LoadScene("MainScene");
+            }, null);        
         });
     }
 

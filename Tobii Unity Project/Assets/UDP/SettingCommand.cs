@@ -32,19 +32,13 @@ namespace Assets.UDP
             }
 
             RepeatNumber = intArray[0];
-
-            foreach(var i in intArray)
-            {
-                Debug.Log(i);
-            }
-
+            ExperimentOrder = new int[intArray.Length - 1];
             Array.Copy(intArray, 1, ExperimentOrder, 0, ExperimentOrder.Length);
-            
         }
 
         public byte[] ToBytes()
         {
-            var intArray = new float[ExperimentOrder.Length + 1];
+            var intArray = new int[ExperimentOrder.Length + 1];
             intArray[0] = RepeatNumber;
             Array.Copy(ExperimentOrder, 0, intArray, 1, ExperimentOrder.Length);
 
@@ -55,6 +49,8 @@ namespace Assets.UDP
             {
                 Array.Copy(BitConverter.GetBytes(intArray[i]), 0, byteArray, 1 + i * sizeof(int), sizeof(int));
             }
+
+
 
             return byteArray;
         }
