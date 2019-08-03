@@ -34,7 +34,7 @@ namespace Assets.UDP
         int sendHostPort = 6001;
         int sendHostPortRange = 0;
 
-        public Action<byte[]> CallBack;
+        public Action<byte[]> CallBack { get; set; }
 
 
         public string localIP, remoteIP;
