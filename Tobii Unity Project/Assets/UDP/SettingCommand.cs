@@ -31,7 +31,7 @@ namespace Assets.UDP
                 var number = reader.ReadInt32();
                 for (var i = 0; i < number; i++)
                 {
-                    var type = (ExperimentType)reader.ReadByte();
+                    var type = (ExperimentType)reader.Read();
                     var num = reader.ReadInt32();
                     var imgPath = new string(reader.ReadChars(reader.ReadInt32()));
                     var ca = reader.ReadBoolean();
@@ -44,19 +44,21 @@ namespace Assets.UDP
         {
             using (var stream = new MemoryStream())
             {
-                var writer = new StreamWriter(stream, Encoding.UTF8);
-                writer.Write((byte)CommandType);
+                stream.WriteByte((byte)CommandType);
+                var writer = new StreamWriter(stream, Encoding.UTF8);               
                 writer.Write(ExperimentList.Count);
                 foreach (var e in ExperimentList)
                 {
-                    writer.Write((byte)e.ExperimentType);
+                    writer.Write(e.ExperimentType);
                     writer.Write(e.Number);
                     writer.Write(e.ImageFile.Length);
                     writer.Write(e.ImageFile);
                     writer.Write(e.CorrectAnswer);
                 }
                 writer.Close();
-                return stream.ToArray();
+                var b = stream.ToArray();
+                Debug.Log(LogDisplay.ArrayToString(b));
+                return b;
             }
         }
     }

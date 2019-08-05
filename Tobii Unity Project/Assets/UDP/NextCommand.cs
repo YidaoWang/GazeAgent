@@ -41,8 +41,8 @@ namespace Assets.UDP
         {
             using (var stream = new MemoryStream())
             {
+                stream.WriteByte((byte)CommandType);
                 var writer = new BinaryWriter(stream, Encoding.UTF8);
-                writer.Write((byte)CommandType);
                 writer.Write(LastExperimentNumber);
                 writer.Write(Answer);
                 writer.Write(Respondent.Length);
