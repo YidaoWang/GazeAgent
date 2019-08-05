@@ -38,6 +38,13 @@ public class SceneSystem : MonoBehaviour
         remoteIP.text = "136.187.82.0";
         repeatNumber.text = "5";
         experimentOrder.text = "123456";
+
+        Application.quitting += OnQuit;
+    }
+
+    private void OnQuit()
+    {
+        UdpSystem.Finish();
     }
 
     // Update is called once per frame

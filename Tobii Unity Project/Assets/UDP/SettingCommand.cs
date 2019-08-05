@@ -45,6 +45,7 @@ namespace Assets.UDP
             using (var stream = new MemoryStream())
             {
                 var writer = new StreamWriter(stream, Encoding.UTF8);
+                writer.Write((byte)CommandType);
                 writer.Write(ExperimentList.Count);
                 foreach (var e in ExperimentList)
                 {
