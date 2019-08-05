@@ -54,6 +54,7 @@ namespace Assets.UDP
                     writer.Write(e.ImageFile);
                     writer.Write(e.CorrectAnswer);
                 }
+                writer.Close();
                 return stream.ToArray();
             }
         }

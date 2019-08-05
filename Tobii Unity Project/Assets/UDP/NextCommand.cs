@@ -48,6 +48,7 @@ namespace Assets.UDP
                 writer.Write(Respondent.Length);
                 writer.Write(Respondent);
                 writer.Write(NextStartTime.ToBinary());
+                writer.Close();
                 return stream.ToArray();
             }
         }

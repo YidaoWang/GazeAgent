@@ -95,7 +95,6 @@ public class SceneSystem : MonoBehaviour
         LoadConnection();
         SetUDP(data =>
         {
-            Debug.Log("receipt" + data[0]);
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
             ExperimentSystem.ExperimentList = setting.ExperimentList;

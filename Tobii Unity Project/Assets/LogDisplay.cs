@@ -19,6 +19,18 @@ public class LogDisplay : MonoBehaviour
 
     private GUIStyle style;
 
+    public static string ArrayToString(IEnumerable enumerable)
+    {
+        var str = "{";
+        foreach (var i in enumerable)
+        {
+            str += i.ToString() + ",";
+        }
+        str.Remove(str.Length - 1);
+        str += "}";
+        return str;
+    }
+
     void Start()
     {
         // Application.logMessageReceivedに関数を登録しておくと、
