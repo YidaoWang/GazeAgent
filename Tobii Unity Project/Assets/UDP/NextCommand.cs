@@ -31,8 +31,7 @@ namespace Assets.UDP
                 if (reader.ReadByte() != (byte)CommandType) return;
                 LastExperimentNumber = reader.ReadInt32();
                 Answer = reader.ReadBoolean();
-                var length = reader.ReadInt32();
-                Respondent = new string(reader.ReadChars(length));
+                Respondent = reader.ReadString();
                 NextStartTime = new DateTime(reader.ReadInt64());
             }
         }
@@ -45,7 +44,6 @@ namespace Assets.UDP
                 var writer = new BinaryWriter(stream, Encoding.UTF8);
                 writer.Write(LastExperimentNumber);
                 writer.Write(Answer);
-                writer.Write(Respondent.Length);
                 writer.Write(Respondent);
                 writer.Write(NextStartTime.ToBinary());
                 writer.Close();
