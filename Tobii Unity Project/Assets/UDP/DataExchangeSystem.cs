@@ -36,14 +36,14 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             {
                 UdpSystem.Finish();
             }
-
-            var localip = ExperimentSettings.LocalAdress;
-            var localport = ExperimentSettings.DataPort;
-            var remoteip = ExperimentSettings.RemoteAdress;
-            var remoteport = ExperimentSettings.DataPort;
-
             UdpSystem = new UDPSystem((x) => Receive(x));
-            UdpSystem.Set(localip, localport, remoteip, remoteport);
+            UdpSystem.Set(
+                ExperimentSettings.LocalAdress,
+                ExperimentSettings.DataPort,
+                ExperimentSettings.RemoteAdress,
+                ExperimentSettings.DataPort,
+                ExperimentSettings.DataSendHostPort
+                );
             UdpSystem.Receive();
         }
 

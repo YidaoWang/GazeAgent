@@ -12,6 +12,8 @@ public static class ExperimentSettings
     public static string RemoteAdress { get; set; }
 
     public static int CommandPort { get { return 5000; } }
+    public static int CommandSendHostPort { get { return 6000; } }
     public static int DataPort { get { return 5001; } }
+    public static int DataSendHostPort { get { return 6001; } }
 }
 

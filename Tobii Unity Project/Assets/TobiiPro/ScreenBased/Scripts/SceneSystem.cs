@@ -170,14 +170,12 @@ public class SceneSystem : MonoBehaviour
         {
             UdpSystem.Finish();
         }
-
-        var localip = ExperimentSettings.LocalAdress;
-        var localport = ExperimentSettings.CommandPort;
-        var remoteip = ExperimentSettings.RemoteAdress;
-        var remoteport = ExperimentSettings.CommandPort;
-
         UdpSystem = new UDPSystem(callback);
-        UdpSystem.Set(localip, localport, remoteip, remoteport);
+        UdpSystem.Set(ExperimentSettings.LocalAdress,
+            ExperimentSettings.CommandPort,
+            ExperimentSettings.RemoteAdress,
+            ExperimentSettings.CommandPort, 
+            ExperimentSettings.CommandSendHostPort);
         UdpSystem.Receive();
     }
 

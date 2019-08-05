@@ -31,7 +31,7 @@ namespace Assets.UDP
         bool finishFlag = false;
         bool onlyFlag = false;
 
-        int sendHostPort = 6001;
+        int sendHostPort;
         int sendHostPortRange = 0;
 
         public Action<byte[]> CallBack { get; set; }
@@ -48,24 +48,26 @@ namespace Assets.UDP
             CallBack = callback;
 
         }
-        public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
-        {
+        public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, int sendhostport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
+        { 
             /* rec,send IP == null -> AnyIP */
 
             localIP = local_ip;
             remoteIP = remote_ip;
             localPort = localport;
             remotePort = remoteport;
+            sendHostPort = sendhostport;
             CallBack = callback;
             onlyFlag = onlyflag;
         }
 
-        public void Set(string local_ip, int localport, string remote_ip, int remoteport, Action<byte[]> callback = null)
+        public void Set(string local_ip, int localport, string remote_ip, int remoteport, int sendhostport, Action<byte[]> callback = null)
         {
             localIP = local_ip;
             remoteIP = remote_ip;
             localPort = localport;
             remotePort = remoteport;
+            sendHostPort = sendhostport;
             if (callback != null) CallBack = callback;
         }
         public void SetSendHostPort(int port, int portRange = 0) //送信用 自己ポート設定
@@ -152,20 +154,20 @@ namespace Assets.UDP
             udp.Close();
         }
 
-        public void Send_NonAsync(byte[] sendByte) //同期送信を行います。(未検証＆使用不要)
-        {
-            if (udpClientSend == null) udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
-            udpClientSend.EnableBroadcast = true;
+        //public void Send_NonAsync(byte[] sendByte) //同期送信を行います。(未検証＆使用不要)
+        //{
+        //    if (udpClientSend == null) udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
+        //    udpClientSend.EnableBroadcast = true;
 
-            try
-            {
-                udpClientSend.Send(sendByte, sendByte.Length, remoteIP, remotePort);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.ToString());
-            }
-        }
+        //    try
+        //    {
+        //        udpClientSend.Send(sendByte, sendByte.Length, remoteIP, remotePort);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Debug.LogError(e.ToString());
+        //    }
+        //}
 
         public void Send_NonAsync2(byte[] sendByte) //同期送信を始めます。(2 検証済)
         {

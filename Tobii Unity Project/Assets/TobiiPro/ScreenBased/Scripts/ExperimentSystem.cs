@@ -47,7 +47,8 @@ public class ExperimentSystem : MonoBehaviour
             CommandUDPSystem.CallBack = OnReceiveCommand;
             if (ExperimentSettings.ServerFlg)
             {
-                var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
+                Thread.Sleep(1000);
+                var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
                 CurrentExperiment.StartTime = nextStartTime;
                 var nextCmd = new NextCommand(-1, false, string.Empty, nextStartTime);
                 CommandUDPSystem.Send_NonAsync2(nextCmd.ToBytes());
@@ -56,7 +57,7 @@ public class ExperimentSystem : MonoBehaviour
         }
         else
         {
-            var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
+            var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
             CurrentExperiment.StartTime = nextStartTime;
             ScheduleStartExperiment();
         }
@@ -94,6 +95,7 @@ public class ExperimentSystem : MonoBehaviour
 
     public void ScheduleStartExperiment()
     {
+        Debug.Log(CurrentExperiment.StartTime);
         var interval = CurrentExperiment.StartTime - DateTime.Now;
         if (interval > TimeSpan.Zero)
         {
