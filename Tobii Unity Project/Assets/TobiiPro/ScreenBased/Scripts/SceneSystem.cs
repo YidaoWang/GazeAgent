@@ -68,7 +68,7 @@ public class SceneSystem : MonoBehaviour
         if (LoadConnection() && LoadExperiment())
         {
             SetExperimentList();
-            ExperimentSettings.SetCommandUDP(UdpSystem, data =>
+            UdpSystem = ExperimentSettings.GetCommandUDP(data =>
             {
                 Debug.Log("COMMAND RECEIVED AT " + this);
                 if (data[0] != (byte)CommandType.Text) return;
@@ -76,7 +76,7 @@ public class SceneSystem : MonoBehaviour
                  if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
                  {
                      Timer?.Stop();
-                     UdpSystem?.Finish();
+                     UdpSystem.Finish();
                      ExperimentSettings.RemoteFlg = true;
                      ExperimentSettings.ServerFlg = true;
                      MainContext.Post(_ =>
@@ -85,6 +85,7 @@ public class SceneSystem : MonoBehaviour
                      }, null);
                  }
              });
+            UdpSystem.Receive();
 
             var setting = new SettingCommand(ExperimentSystem.ExperimentList);
             Timer = new System.Timers.Timer(1000);
@@ -100,9 +101,9 @@ public class SceneSystem : MonoBehaviour
     public void StartAsClient()
     {
         LoadConnection();
-        ExperimentSettings.SetCommandUDP(UdpSystem, data =>
+        UdpSystem = ExperimentSettings.GetCommandUDP(data =>
         {
-            Debug.Log("COMMAND RECEIVED AT " + this);
+            Debug.Log("COMMAND RECEIVED AT " + this.ToString());
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
             ExperimentSystem.ExperimentList = setting.ExperimentList;
@@ -115,6 +116,7 @@ public class SceneSystem : MonoBehaviour
                 SceneManager.LoadScene("MainScene");
             }, null);
         });
+        UdpSystem.Receive();
     }
 
     public void OnClickFinish()

@@ -44,7 +44,8 @@ public class ExperimentSystem : MonoBehaviour
 
         if (ExperimentSettings.RemoteFlg)
         {
-            ExperimentSettings.SetCommandUDP(UdpSystem, OnReceiveCommand);
+            UdpSystem = ExperimentSettings.GetCommandUDP(OnReceiveCommand);
+            UdpSystem.Receive();
             if (ExperimentSettings.ServerFlg)
             {
                 Thread.Sleep(3000);
@@ -65,7 +66,7 @@ public class ExperimentSystem : MonoBehaviour
 
     void OnReceiveCommand(byte[] data)
     {
-        Debug.Log("COMMAND RECEIVED");
+        Debug.Log("COMMAND RECEIVED AT " + this);
         switch ((CommandType)data[0])
         {
             case CommandType.Next:
