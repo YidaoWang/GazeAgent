@@ -185,12 +185,12 @@ namespace Assets.UDP
             if (targetIP == null)
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort));
-                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Parse(targetIP), remotePort));
-                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
+                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
             }
         }
         public void Send(byte[] sendByte, byte retryCount = 0) //非同期送信をUdpClientで開始します。(通常) <retry>

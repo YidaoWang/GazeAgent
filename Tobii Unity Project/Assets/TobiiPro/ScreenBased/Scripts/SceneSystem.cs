@@ -70,7 +70,7 @@ public class SceneSystem : MonoBehaviour
             SetExperimentList();
             UdpSystem = ExperimentSettings.GetCommandUDP(data =>
             {
-                Debug.Log("COMMAND RECEIVED AT " + this);
+                Debug.Log("COMMAND RECEIVED AT " + nameof(StartAsServer));
                 if (data[0] != (byte)CommandType.Text) return;
                  var res = new TextCommand(data);
                  if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
@@ -103,7 +103,7 @@ public class SceneSystem : MonoBehaviour
         LoadConnection();
         UdpSystem = ExperimentSettings.GetCommandUDP(data =>
         {
-            Debug.Log("COMMAND RECEIVED AT " + this.ToString());
+            Debug.Log("COMMAND RECEIVED AT " + nameof(StartAsClient));
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
             ExperimentSystem.ExperimentList = setting.ExperimentList;

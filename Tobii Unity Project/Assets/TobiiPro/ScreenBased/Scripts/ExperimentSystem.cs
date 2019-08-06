@@ -66,7 +66,7 @@ public class ExperimentSystem : MonoBehaviour
 
     void OnReceiveCommand(byte[] data)
     {
-        Debug.Log("COMMAND RECEIVED AT " + this);
+        Debug.Log("COMMAND RECEIVED AT " + nameof(Start));
         switch ((CommandType)data[0])
         {
             case CommandType.Next:
