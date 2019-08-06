@@ -89,6 +89,10 @@ public class ExperimentSystem : MonoBehaviour
                     Debug.Log(nextExp.StartTime);
                     if (nextExp.StartTime == null || nextExp.StartTime > next.NextStartTime)
                     {
+                        MainContext.Post(_ =>
+                        {
+                            DisableInputs();
+                        }, null);
                         NextExperiment.StartTime = next.NextStartTime;
                         Next(ExperimentSettings.RemoteAdress, next.Answer, null);
                     }
