@@ -410,6 +410,7 @@ public class CommunicationMedia : MonoBehaviour
 
     private void RenderingReceivedData(IMediaData data)
     {
+        if (texture == null) return;
         switch (data.MediaCondition)
         {
             case MediaCondition.A:
