@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Assets.UDP
 {
@@ -25,6 +26,7 @@ namespace Assets.UDP
 
         public NextCommand(byte[] data)
         {
+            Debug.Log(LogDisplay.ArrayToString(data));
             using (var stream = new MemoryStream(data))
             {
                 var reader = new BinaryReader(stream, Encoding.UTF8);
@@ -32,22 +34,25 @@ namespace Assets.UDP
                 LastExperimentNumber = reader.ReadInt32();
                 Answer = reader.ReadBoolean();
                 Respondent = reader.ReadString();
-                NextStartTime = new DateTime(reader.ReadInt64());
+                Debug.Log(Respondent);
+                NextStartTime = DateTime.FromBinary(reader.ReadInt64());
             }
         }
 
         public byte[] ToBytes()
         {
             using (var stream = new MemoryStream())
-            {
-                stream.WriteByte((byte)CommandType);
+            {             
                 var writer = new BinaryWriter(stream, Encoding.UTF8);
+                writer.Write((byte)CommandType);
                 writer.Write(LastExperimentNumber);
                 writer.Write(Answer);
                 writer.Write(Respondent);
                 writer.Write(NextStartTime.ToBinary());
                 writer.Close();
-                return stream.ToArray();
+                var d = stream.ToArray();
+                //Debug.Log(LogDisplay.ArrayToString(d));
+                return d;
             }
         }
     }
