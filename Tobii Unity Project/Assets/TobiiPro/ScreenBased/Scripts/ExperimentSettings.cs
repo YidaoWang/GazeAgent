@@ -19,7 +19,7 @@ public static class ExperimentSettings
 
     public static UDPSystem GetCommandUDP(Action<byte[]> callback)
     {
-        var udp = new UDPSystem(callback);
+        var udp = new UDPSystem(callback, true);
         udp.Set(LocalAdress,
             CommandPort,
             RemoteAdress,

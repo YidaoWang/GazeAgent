@@ -29,7 +29,7 @@ namespace Assets.UDP
         static List<IPandPort> recList = new List<IPandPort>();
 
         bool finishFlag = false;
-        bool onlyFlag = false;
+        bool logFlag = false;
 
         int sendHostPort;
         int sendHostPortRange = 0;
@@ -43,13 +43,13 @@ namespace Assets.UDP
         UdpClient udpClientSend;
         UdpClient tmpReceiver; //受信終了用TMP
 
-        public UDPSystem(Action<byte[]> callback)
+        public UDPSystem(Action<byte[]> callback, bool printLog = false)
         {
             CallBack = callback;
-
+            logFlag = printLog;
         }
-        public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, int sendhostport, Action<byte[]> callback, bool onlyflag = false) //オーバーロード 2
-        { 
+        public UDPSystem(string local_ip, int localport, string remote_ip, int remoteport, int sendhostport, Action<byte[]> callback, bool printLog = false) //オーバーロード 2
+        {
             /* rec,send IP == null -> AnyIP */
 
             localIP = local_ip;
@@ -58,7 +58,7 @@ namespace Assets.UDP
             remotePort = remoteport;
             sendHostPort = sendhostport;
             CallBack = callback;
-            onlyFlag = onlyflag;
+            logFlag = printLog;
         }
 
         public void Set(string local_ip, int localport, string remote_ip, int remoteport, int sendhostport, Action<byte[]> callback = null)
@@ -103,9 +103,12 @@ namespace Assets.UDP
             //udpClientReceive.Connect(IPAddress.Parse(remoteIP), remotePort);
             udpClientReceive.BeginReceive(UDPReceive, udpClientReceive);
 
-            if (targetIP == null) Debug.Log("受信を開始しました。 Any " + IPAddress.Any + " " + port);
-            else if (targetIP == "") Debug.Log("受信を開始しました。 Me " + ScanIPAddr.IP[0] + " " + port);
-            else Debug.Log("受信を開始しました。" + IPAddress.Parse(targetIP) + " " + port);
+            if (logFlag)
+            {
+                if (targetIP == null) Debug.Log("受信を開始しました。 Any " + IPAddress.Any + " " + port);
+                else if (targetIP == "") Debug.Log("受信を開始しました。 Me " + ScanIPAddr.IP[0] + " " + port);
+                else Debug.Log("受信を開始しました。" + IPAddress.Parse(targetIP) + " " + port);
+            }
 
             tmpReceiver = udpClientReceive;
         }
@@ -129,23 +132,25 @@ namespace Assets.UDP
             }
             catch (SocketException ex)
             {
-                Debug.Log("Error" + ex);
+                if (logFlag)
+                    Debug.Log("Error" + ex);
                 return;
             }
             catch (ObjectDisposedException) // Finish : Socket Closed
             {
-                Debug.Log("Socket Already Closed.");
+                if (logFlag)
+                    Debug.Log("Socket Already Closed.");
                 return;
             }
 
-            if (finishFlag || onlyFlag)
+            if (finishFlag)
             {
                 FinishUDP(getUdp);
                 return;
             }
 
-
-            Debug.Log("Retry");
+            if (logFlag)
+                Debug.Log("Retry");
             getUdp.BeginReceive(UDPReceive, getUdp); // Retry
 
         }
@@ -185,12 +190,14 @@ namespace Assets.UDP
             if (targetIP == null)
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
+                if (logFlag)
+                    Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
                 udpClientSend.Send(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Parse(targetIP), remotePort));
-                Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
+                if (logFlag)
+                    Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort);
             }
         }
         public void Send(byte[] sendByte, byte retryCount = 0) //非同期送信をUdpClientで開始します。(通常) <retry>
@@ -224,12 +231,14 @@ namespace Assets.UDP
             if (targetIP == null)
             {
                 udpClientSend.BeginSend(sendByte, sendByte.Length, new IPEndPoint(IPAddress.Broadcast, remotePort), UDPSender, udpClientSend);
-                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
+                if (logFlag)
+                  Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > BroadCast " + IPAddress.Broadcast + ":" + remotePort);
             }
             else
             {
                 udpClientSend.BeginSend(sendByte, sendByte.Length, remoteIP, remotePort, UDPSender, udpClientSend);
-                //Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
+                if (logFlag)
+                    Debug.Log("送信処理しました。" + ScanIPAddr.IP[0] + " > " + IPAddress.Parse(targetIP) + ":" + remotePort + "[" + sendByte[0] + "][" + sendByte[1] + "]...");
             }
         }
 
@@ -239,7 +248,8 @@ namespace Assets.UDP
             try
             {
                 udp.EndSend(res);
-                Debug.Log("Send");
+                if (logFlag)
+                    Debug.Log("Send");
             }
             catch (SocketException ex)
             {

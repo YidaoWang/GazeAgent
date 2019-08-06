@@ -56,7 +56,7 @@ namespace Assets.UDP
                 }
                 writer.Close();
                 var b = stream.ToArray();
-                Debug.Log(LogDisplay.ArrayToString(b));
+                //Debug.Log(LogDisplay.ArrayToString(b));
                 return b;
             }
         }
