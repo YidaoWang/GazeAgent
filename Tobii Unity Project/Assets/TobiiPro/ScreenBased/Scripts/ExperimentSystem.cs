@@ -83,7 +83,10 @@ public class ExperimentSystem : MonoBehaviour
                 else
                 {
                     // 相手が先に押した場合
+                    Debug.Log(next.LastExperimentNumber);
                     var nextExp = ExperimentList[next.LastExperimentNumber + 1];
+                    Debug.Log(nextExp);
+                    Debug.Log(nextExp.StartTime);
                     if (nextExp.StartTime == null || nextExp.StartTime > next.NextStartTime)
                     {
                         NextExperiment.StartTime = next.NextStartTime;
@@ -102,7 +105,11 @@ public class ExperimentSystem : MonoBehaviour
     public void ScheduleStartExperiment()
     {
         Debug.Log(CurrentExperiment.StartTime);
-        var interval = CurrentExperiment.StartTime - DateTime.Now;
+        if(CurrentExperiment.StartTime == null)
+        {
+            return;
+        }
+        TimeSpan interval = CurrentExperiment.StartTime.Value - DateTime.Now;
         if (interval > TimeSpan.Zero)
         {
             var timer = new System.Timers.Timer(interval.TotalMilliseconds);

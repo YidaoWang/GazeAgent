@@ -20,8 +20,8 @@ public class Experiment
     public ExperimentType ExperimentType { get; set; }
     public int Number { get; set; }
     public string Respondent { get; set; }
-    public DateTime StartTime { get; set; }
-    public DateTime ResponseTime { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? ResponseTime { get; set; }
     public string ImageFile { get; set; }
     public string GazeDataFile { get; set; }
     public bool CorrectAnswer { get; set; }
@@ -33,6 +33,7 @@ public class Experiment
         Number = number;
         ImageFile = imagePath;
         CorrectAnswer = correctAnswer;
+
     }
 
     public void Start()

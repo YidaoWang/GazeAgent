@@ -14,7 +14,7 @@ namespace Assets.UDP
         public int LastExperimentNumber { get; set; }
         public bool Answer { get; set; }
         public string Respondent { get; set; }
-        public DateTime NextStartTime { get; set; }
+        public DateTime? NextStartTime { get; set; }
 
         public NextCommand(int lastExperimentNumber, bool answer, string respondent, DateTime nextStartTime)
         {
@@ -48,7 +48,7 @@ namespace Assets.UDP
                 writer.Write(LastExperimentNumber);
                 writer.Write(Answer);
                 writer.Write(Respondent);
-                writer.Write(NextStartTime.ToBinary());
+                writer.Write(NextStartTime?.ToBinary() ?? (long)0);
                 writer.Close();
                 var d = stream.ToArray();
                 //Debug.Log(LogDisplay.ArrayToString(d));
