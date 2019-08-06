@@ -44,7 +44,7 @@ public class SceneSystem : MonoBehaviour
 
     private void OnQuit()
     {
-        UdpSystem.Finish();
+        UdpSystem?.Finish();
     }
 
     // Update is called once per frame
@@ -68,23 +68,23 @@ public class SceneSystem : MonoBehaviour
         if (LoadConnection() && LoadExperiment())
         {
             SetExperimentList();
-
-            SetUDP(data =>
+            ExperimentSettings.SetCommandUDP(UdpSystem, data =>
             {
+                Debug.Log("COMMAND RECEIVED AT " + this);
                 if (data[0] != (byte)CommandType.Text) return;
-                var res = new TextCommand(data);
-                if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
-                {
-                    Timer?.Stop();
-                    ExperimentSettings.RemoteFlg = true;
-                    ExperimentSettings.ServerFlg = true;
-                    ExperimentSystem.CommandUDPSystem = UdpSystem;
-                    MainContext.Post(_ =>
-                    {
-                        SceneManager.LoadScene("MainScene");
-                    }, null);
-                }
-            });
+                 var res = new TextCommand(data);
+                 if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
+                 {
+                     Timer?.Stop();
+                     UdpSystem?.Finish();
+                     ExperimentSettings.RemoteFlg = true;
+                     ExperimentSettings.ServerFlg = true;
+                     MainContext.Post(_ =>
+                     {
+                         SceneManager.LoadScene("MainScene");
+                     }, null);
+                 }
+             });
 
             var setting = new SettingCommand(ExperimentSystem.ExperimentList);
             Timer = new System.Timers.Timer(1000);
@@ -100,15 +100,16 @@ public class SceneSystem : MonoBehaviour
     public void StartAsClient()
     {
         LoadConnection();
-        SetUDP(data =>
+        ExperimentSettings.SetCommandUDP(UdpSystem, data =>
         {
+            Debug.Log("COMMAND RECEIVED AT " + this);
             if (data[0] != (byte)CommandType.Setting) return;
             var setting = new SettingCommand(data);
             ExperimentSystem.ExperimentList = setting.ExperimentList;
             var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
             UdpSystem.Send_NonAsync2(res.ToBytes());
+            UdpSystem.Finish();
             ExperimentSettings.RemoteFlg = true;
-            ExperimentSystem.CommandUDPSystem = UdpSystem;
             MainContext.Post(_ =>
             {
                 SceneManager.LoadScene("MainScene");
@@ -161,22 +162,6 @@ public class SceneSystem : MonoBehaviour
             RepeatNumber = int.Parse(repeatNumber);
             return true;
         }
-    }
-
-
-    void SetUDP(Action<byte[]> callback)
-    {
-        if (UdpSystem != null)
-        {
-            UdpSystem.Finish();
-        }
-        UdpSystem = new UDPSystem(callback);
-        UdpSystem.Set(ExperimentSettings.LocalAdress,
-            ExperimentSettings.CommandPort,
-            ExperimentSettings.RemoteAdress,
-            ExperimentSettings.CommandPort, 
-            ExperimentSettings.CommandSendHostPort);
-        UdpSystem.Receive();
     }
 
     void SetExperimentList()

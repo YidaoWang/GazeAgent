@@ -26,25 +26,8 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             MainContext = SynchronizationContext.Current;
             if (ExperimentSettings.RemoteFlg)
             {
-                SetUDP();
+                ExperimentSettings.SetDataUDP(UdpSystem, Receive);
             }
-        }
-
-        public void SetUDP()
-        {
-            if (UdpSystem != null)
-            {
-                UdpSystem.Finish();
-            }
-            UdpSystem = new UDPSystem((x) => Receive(x));
-            UdpSystem.Set(
-                ExperimentSettings.LocalAdress,
-                ExperimentSettings.DataPort,
-                ExperimentSettings.RemoteAdress,
-                ExperimentSettings.DataPort,
-                ExperimentSettings.DataSendHostPort
-                );
-            UdpSystem.Receive();
         }
 
         public void FinishUDP()

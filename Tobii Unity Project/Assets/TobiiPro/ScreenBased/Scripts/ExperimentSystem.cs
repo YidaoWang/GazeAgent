@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class ExperimentSystem : MonoBehaviour
 {
     public static List<Experiment> ExperimentList { get; set; }
-    public static UDPSystem CommandUDPSystem { get; set; }
+    private UDPSystem UdpSystem;
     public GameObject Wall;
 
     public int CurrentIndex { get; private set; }
@@ -44,14 +44,14 @@ public class ExperimentSystem : MonoBehaviour
 
         if (ExperimentSettings.RemoteFlg)
         {
-            CommandUDPSystem.CallBack = OnReceiveCommand;
+            ExperimentSettings.SetCommandUDP(UdpSystem, OnReceiveCommand);
             if (ExperimentSettings.ServerFlg)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(3000);
                 var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
                 CurrentExperiment.StartTime = nextStartTime;
                 var nextCmd = new NextCommand(-1, false, string.Empty, nextStartTime);
-                CommandUDPSystem.Send_NonAsync2(nextCmd.ToBytes());
+                UdpSystem.Send_NonAsync2(nextCmd.ToBytes());
                 ScheduleStartExperiment();
             }
         }
@@ -65,10 +65,15 @@ public class ExperimentSystem : MonoBehaviour
 
     void OnReceiveCommand(byte[] data)
     {
+        Debug.Log("COMMAND RECEIVED");
         switch ((CommandType)data[0])
         {
             case CommandType.Next:
+
+                Debug.Log("Next");
                 var next = new NextCommand(data);
+
+                Debug.Log(next.NextStartTime);
                 if (next.LastExperimentNumber == -1)
                 {
                     CurrentExperiment.StartTime = next.NextStartTime;
@@ -114,7 +119,7 @@ public class ExperimentSystem : MonoBehaviour
 
     void StartExperiment()
     {
-        Debug.Log("started");
+        Debug.Log("EXPEROMENT STARTED");
         var img = GameObject.Find("Canvas/Task").GetComponent<Image>();
 
         var texture = FileManager.LoadPNG(Application.dataPath + CurrentExperiment.ImageFile);
@@ -172,7 +177,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         if (!ExperimentSettings.RemoteFlg) return;
         var nextCmd = new NextCommand(CurrentIndex, answer, ExperimentSettings.LocalAdress, nextStartTime);
-        CommandUDPSystem.Send_NonAsync2(nextCmd.ToBytes());
+        UdpSystem.Send_NonAsync2(nextCmd.ToBytes());
     }
 
     void Next(string respondent, bool answer, string dazedataFile)
