@@ -1,5 +1,6 @@
 ﻿
 using Assets.IO;
+using Assets.TobiiPro.ScreenBased.Scripts;
 using Assets.UDP;
 using System;
 using System.Collections.Generic;
@@ -18,8 +19,10 @@ public class ExperimentSystem : MonoBehaviour
     UDPSystem UdpSystem;
     GameObject Wall;
     ScreenBasedSaveData SaveData;
+    CenterCircle CenterCircle;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
+    private System.Timers.Timer Timer;
 
     public Experiment CurrentExperiment
     {
@@ -46,12 +49,80 @@ public class ExperimentSystem : MonoBehaviour
         MainContext = SynchronizationContext.Current;
         Wall = GameObject.Find("Wall");
         SaveData = GameObject.Find("[SaveData]").GetComponent<ScreenBasedSaveData>();
-
+        CenterCircle = GameObject.Find("Circle").GetComponent<CenterCircle>();
         var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
-        cs.COnClick();
+        cs.FCOnClick();
+    }
+
+    public void Connect()
+    {
+        if (!CenterCircle.GazingCenter) return;
+        CenterCircle.gameObject.SetActive(false);
 
         if (ExperimentSettings.RemoteFlg)
         {
+            if (ExperimentSettings.ServerFlg)
+            {
+                ConnectAsServer();
+            }
+            else
+            {
+                ConnectAsClient();
+            }
+        }
+        else
+        {
+            StartFromFirstExperiment();
+        }
+    }
+
+    void ConnectAsServer()
+    {
+        UdpSystem = ExperimentSettings.GetCommandUDP(data =>
+        {
+            Debug.Log("COMMAND RECEIVED AT " + nameof(ConnectAsServer));
+            if (data[0] != (byte)CommandType.Text) return;
+            var res = new TextCommand(data);
+            if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
+            {
+                Timer?.Stop();
+                UdpSystem.Finish();
+                StartFromFirstExperiment();
+            }
+        });
+        UdpSystem.Receive();
+
+        var setting = new SettingCommand(ExperimentList);
+        Timer = new System.Timers.Timer(1000);
+        Timer.Elapsed += (sender, e) =>
+        {
+            UdpSystem.Send_NonAsync2(setting.ToBytes());
+        };
+        Timer.Start();
+    }
+
+    void ConnectAsClient()
+    {
+        UdpSystem = ExperimentSettings.GetCommandUDP(data =>
+        {
+            Debug.Log("COMMAND RECEIVED AT " + nameof(ConnectAsClient));
+            if (data[0] != (byte)CommandType.Setting) return;
+            var setting = new SettingCommand(data);
+            ExperimentList = setting.ExperimentList;
+            var res = new TextCommand(ExperimentSettings.LocalAdress + "SETTING RECEIVED");
+            UdpSystem.Send_NonAsync2(res.ToBytes());
+            UdpSystem.Finish();
+            StartFromFirstExperiment();
+        });
+        UdpSystem.Receive();
+    }
+
+    public void StartFromFirstExperiment()
+    {
+        if (ExperimentSettings.RemoteFlg)
+        {
+            var dex = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
+            dex.RemoteFlg = true;
             UdpSystem = ExperimentSettings.GetCommandUDP(OnReceiveCommand);
             UdpSystem.Receive();
             if (ExperimentSettings.ServerFlg)

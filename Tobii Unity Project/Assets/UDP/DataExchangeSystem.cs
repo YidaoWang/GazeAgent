@@ -21,9 +21,12 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         public GazeMediaData LatestGazeData { get; set; }
 
+        public bool RemoteFlg { get; set; }
+
         void Start()
         {
             MainContext = SynchronizationContext.Current;
+            RemoteFlg = false;
             if (ExperimentSettings.RemoteFlg)
             {
                 UdpSystem = ExperimentSettings.GetDataUDP(Receive);
@@ -58,24 +61,29 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             {
                 case MediaCondition.A:
                     mediaData = new AgentMediaData(data);
+                    OnReceive?.Invoke(mediaData);
+                    mediaData?.Dispose();
                     break;
                 case MediaCondition.F:
                     mediaData = new VideoMediaData(data);
+                    OnReceive?.Invoke(mediaData);
+                    mediaData?.Dispose();
                     break;
                 case MediaCondition.N:
                     mediaData = new GazeMediaData(data);
+                    LatestGazeData?.Dispose();
+                    LatestGazeData = mediaData as GazeMediaData;
+                    OnReceive?.Invoke(mediaData);
                     break;
                 default:
                     break;
             }
-            OnReceive?.Invoke(mediaData);
-            mediaData?.Dispose();
             GC.Collect();
         }
 
         public void Post(IMediaData data)
         {
-            if (!ExperimentSettings.RemoteFlg)
+            if (!RemoteFlg)
             {
                 ReceiveOnMainContext(data.ToBytes());
             }

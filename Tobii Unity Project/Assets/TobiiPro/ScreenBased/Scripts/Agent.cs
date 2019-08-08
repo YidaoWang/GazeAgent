@@ -30,7 +30,7 @@ namespace DlibFaceLandmarkDetectorExample
         /// <summary>
         /// 
         /// </summary>
-        const float REDUCTION_RATE = 1 / 2.0f;
+        const float REDUCTION_RATE = 1 / 3.0f;
 
 
         public int Width { get; }
