@@ -21,6 +21,7 @@ public class ExperimentSystem : MonoBehaviour
     ScreenBasedSaveData SaveData;
     CenterCircle CenterCircle;
     DataExchangeSystem DataExchangeSystem;
+    private ConditionSettings ConditionSettings;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
     private System.Timers.Timer Timer;
@@ -52,8 +53,8 @@ public class ExperimentSystem : MonoBehaviour
         SaveData = GameObject.Find("[SaveData]").GetComponent<ScreenBasedSaveData>();
         CenterCircle = GameObject.Find("Circle").GetComponent<CenterCircle>();
         DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
-        var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
-        cs.FCOnClick();
+        ConditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+        ConditionSettings.FCOnClick();
     }
 
     public void Connect()
@@ -121,6 +122,7 @@ public class ExperimentSystem : MonoBehaviour
 
     public void StartFromFirstExperiment()
     {
+        ConditionSettings.NOnClick();
         if (ExperimentSettings.RemoteFlg)
         {
             DataExchangeSystem.RemoteFlg = true;
@@ -209,30 +211,29 @@ public class ExperimentSystem : MonoBehaviour
 
         var texture = FileManager.LoadPNG(Application.dataPath + CurrentExperiment.ImageFile);
         img.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-
-        var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
+        
         switch (CurrentExperiment.ExperimentType)
         {
             case ExperimentType.P:
-                cs.COnClick();
+                ConditionSettings.COnClick();
                 break;
             case ExperimentType.A:
-                cs.AOnClick();
+                ConditionSettings.AOnClick();
                 break;
             case ExperimentType.AC:
-                cs.ACOnClick();
+                ConditionSettings.ACOnClick();
                 break;
             case ExperimentType.F:
-                cs.FOnClick();
+                ConditionSettings.FOnClick();
                 break;
             case ExperimentType.FC:
-                cs.FCOnClick();
+                ConditionSettings.FCOnClick();
                 break;
             case ExperimentType.N:
-                cs.NOnClick();
+                ConditionSettings.NOnClick();
                 break;
             case ExperimentType.C:
-                cs.COnClick();
+                ConditionSettings.COnClick();
                 break;
         }
         CurrentExperiment.Start();

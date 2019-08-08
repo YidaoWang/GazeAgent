@@ -410,12 +410,12 @@ public class CommunicationMedia : MonoBehaviour
 
     private void RenderingReceivedData(IMediaData data)
     {
-        if (texture == null) return;
+        if (texture == null || data.MediaCondition != ConditionSettings.MediaCondition) return;
         switch (data.MediaCondition)
         {
             case MediaCondition.A:
                 var agentData = data as AgentMediaData;
-                Vector2 screenPos = new Vector2(texture.width/2, texture.height/2);
+                Vector2 screenPos = new Vector2(texture.width / 2, texture.height / 2);
                 if (dataExchangeSystem.LatestGazeData != null)
                 {
                     screenPos = ToScreenPos(dataExchangeSystem.LatestGazeData.GazePoint);
