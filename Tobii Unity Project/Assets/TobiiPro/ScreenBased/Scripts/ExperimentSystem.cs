@@ -20,6 +20,7 @@ public class ExperimentSystem : MonoBehaviour
     GameObject Wall;
     ScreenBasedSaveData SaveData;
     CenterCircle CenterCircle;
+    DataExchangeSystem DataExchangeSystem;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
     private System.Timers.Timer Timer;
@@ -50,6 +51,7 @@ public class ExperimentSystem : MonoBehaviour
         Wall = GameObject.Find("Wall");
         SaveData = GameObject.Find("[SaveData]").GetComponent<ScreenBasedSaveData>();
         CenterCircle = GameObject.Find("Circle").GetComponent<CenterCircle>();
+        DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
         var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         cs.FCOnClick();
     }
@@ -121,8 +123,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         if (ExperimentSettings.RemoteFlg)
         {
-            var dex = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
-            dex.RemoteFlg = true;
+            DataExchangeSystem.RemoteFlg = true;
             UdpSystem = ExperimentSettings.GetCommandUDP(OnReceiveCommand);
             UdpSystem.Receive();
             if (ExperimentSettings.ServerFlg)
