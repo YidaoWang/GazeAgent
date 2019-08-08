@@ -29,7 +29,7 @@ namespace Tobii.Research.Unity
 
         [SerializeField]
         [Tooltip("Folder in the application root directory where data is saved.")]
-        private string _folder = "Data";
+        private string _folder = "Data/gaze";
 
         [SerializeField]
         [Tooltip("This key will start or stop saving data.")]

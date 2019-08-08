@@ -9,6 +9,7 @@ using System.Timers;
 using System.Xml;
 using Tobii.Research.Unity;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ExperimentSystem : MonoBehaviour
@@ -209,7 +210,7 @@ public class ExperimentSystem : MonoBehaviour
         Debug.Log("EXPEROMENT STARTED");
         var img = GameObject.Find("Canvas/Task").GetComponent<Image>();
 
-        var texture = FileManager.LoadPNG(Application.dataPath + CurrentExperiment.ImageFile);
+        var texture = FileManager.LoadPNG(Application.dataPath + "/StreamingAssets/" + CurrentExperiment.ImageFile);
         img.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
         
         switch (CurrentExperiment.ExperimentType)
@@ -248,6 +249,24 @@ public class ExperimentSystem : MonoBehaviour
     public void OnClickF()
     {
         OnClick(false);
+    }
+
+
+    public void Back()
+    {
+        SceneManager.UnloadSceneAsync(SceneManager.GetActiveScene());
+        SceneManager.LoadScene("StartScene");
+    }
+
+    public void OnClickFinish()
+    {
+        UdpSystem.Finish();
+        DataExchangeSystem.UdpSystem.Finish();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#elif UNITY_STANDALONE
+    UnityEngine.Application.Quit();
+#endif
     }
 
     void OnClick(bool answer)
@@ -302,6 +321,10 @@ public class ExperimentSystem : MonoBehaviour
 
     void FinishExperiment()
     {
+        UdpSystem?.Finish();
+        DataExchangeSystem?.UdpSystem?.Finish();
+        EyeTracker.Instance.StopAllCoroutines();
+
         var fileSettings = new XmlWriterSettings();
         fileSettings.Indent = true;
         var fileName = string.Format("experiment_{0}.xml", System.DateTime.Now.ToString("yyyyMMddTHHmmss"));
@@ -327,6 +350,9 @@ public class ExperimentSystem : MonoBehaviour
         file.WriteEndDocument();
         file.Flush();
         file.Close();
+
+        SceneManager.UnloadSceneAsync(SceneManager.GetActiveScene());
+        SceneManager.LoadScene("EndScene");
     }
 }
 
