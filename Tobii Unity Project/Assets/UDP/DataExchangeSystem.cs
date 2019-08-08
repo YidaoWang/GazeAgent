@@ -53,24 +53,24 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
 
         private void ReceiveOnMainContext(byte[] data)
         {
+            IMediaData mediaData = null;
             switch ((MediaCondition)data[0])
             {
                 case MediaCondition.A:
-                    //LatestAgentData = new AgentMediaData(data);
-                    OnReceive?.Invoke(new AgentMediaData(data));
+                    mediaData = new AgentMediaData(data);
                     break;
                 case MediaCondition.F:
-                    var videoData = new VideoMediaData(data);
-                    OnReceive?.Invoke(videoData);
+                    mediaData = new VideoMediaData(data);
                     break;
                 case MediaCondition.N:
-                    LatestGazeData = new GazeMediaData(data);
-                    OnReceive?.Invoke(LatestGazeData);
+                    mediaData = new GazeMediaData(data);
                     break;
                 default:
-
                     break;
             }
+            OnReceive?.Invoke(mediaData);
+            mediaData?.Dispose();
+            GC.Collect();
         }
 
         public void Post(IMediaData data)

@@ -76,8 +76,9 @@ namespace Tobii.Research.Unity
                 && gazeData.TimeStamp > (_lastGazeData.TimeStamp + float.Epsilon))
             {
                 var gazepoint = GetGazePointdata(gazeData);
-                dataExchangeSystem.Post(new GazeMediaData(gazepoint));
-
+                var gazemedia = new GazeMediaData(gazepoint);
+                dataExchangeSystem.Post(gazemedia);
+                gazemedia.Dispose();
                 _lastGazeData = gazeData;
             }
         }

@@ -40,5 +40,9 @@ namespace Assets.UDP
 
             return byteArray;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

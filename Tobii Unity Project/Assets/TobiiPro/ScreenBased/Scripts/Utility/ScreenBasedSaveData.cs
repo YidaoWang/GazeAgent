@@ -51,6 +51,8 @@ namespace Tobii.Research.Unity
             }
         }
 
+        public string LastFileName { get; set; }
+
         private EyeTracker _eyeTracker;
         private XmlWriterSettings _fileSettings;
         private XmlWriter _file;
@@ -125,6 +127,7 @@ namespace Tobii.Research.Unity
             _fileSettings.Indent = true;
             var fileName = string.Format("data_{0}.xml", System.DateTime.Now.ToString("yyyyMMddTHHmmss"));
             _file = XmlWriter.Create(System.IO.Path.Combine(_folder, fileName), _fileSettings);
+            LastFileName = fileName;
             _file.WriteStartDocument();
             _file.WriteStartElement("Data");
         }

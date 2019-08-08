@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Timers;
+using System.Xml;
 using Tobii.Research.Unity;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,16 +13,19 @@ using UnityEngine.UI;
 public class ExperimentSystem : MonoBehaviour
 {
     public static List<Experiment> ExperimentList { get; set; }
-    private UDPSystem UdpSystem;
-    public GameObject Wall;
-    ScreenBasedSaveData SaveData;
-
     public int CurrentIndex { get; private set; }
+
+    UDPSystem UdpSystem;
+    GameObject Wall;
+    ScreenBasedSaveData SaveData;
+    string _folder = "Data";
+    private XmlWriterSettings _fileSettings;
 
     public Experiment CurrentExperiment
     {
         get
         {
+            if (CurrentIndex >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex];
         }
     }
@@ -29,6 +33,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         get
         {
+            if (CurrentIndex + 1 >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex + 1];
         }
     }
@@ -73,11 +78,7 @@ public class ExperimentSystem : MonoBehaviour
         switch ((CommandType)data[0])
         {
             case CommandType.Next:
-
-                Debug.Log("Next");
                 var next = new NextCommand(data);
-
-                Debug.Log(next.NextStartTime);
                 if (next.LastExperimentNumber == -1)
                 {
                     CurrentExperiment.StartTime = next.NextStartTime;
@@ -86,10 +87,7 @@ public class ExperimentSystem : MonoBehaviour
                 else
                 {
                     // 相手が先に押した場合
-                    Debug.Log(next.LastExperimentNumber);
                     var nextExp = ExperimentList[next.LastExperimentNumber + 1];
-                    Debug.Log(nextExp);
-                    Debug.Log(nextExp.StartTime);
                     if (nextExp.StartTime == null || nextExp.StartTime > next.NextStartTime)
                     {
                         MainContext.Post(_ =>
@@ -97,7 +95,7 @@ public class ExperimentSystem : MonoBehaviour
                             DisableInputs();
                         }, null);
                         NextExperiment.StartTime = next.NextStartTime;
-                        Next(ExperimentSettings.RemoteAdress, next.Answer, null);
+                        Next(ExperimentSettings.RemoteAdress, next.Answer, GetGazeDataFile());
                     }
                     // 自分が先に押した場合
                     else
@@ -112,7 +110,7 @@ public class ExperimentSystem : MonoBehaviour
     public void ScheduleStartExperiment()
     {
         Debug.Log(CurrentExperiment.StartTime);
-        if(CurrentExperiment.StartTime == null)
+        if (CurrentExperiment.StartTime == null)
         {
             return;
         }
@@ -183,7 +181,10 @@ public class ExperimentSystem : MonoBehaviour
     {
         DisableInputs();
         var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(1000);
-        NextExperiment.StartTime = nextStartTime;
+        if (NextExperiment != null)
+        {
+            NextExperiment.StartTime = nextStartTime;
+        }
         NoticeRemote(answer, nextStartTime);
         Next(ExperimentSettings.LocalAdress, answer, GetGazeDataFile());
     }
@@ -211,7 +212,7 @@ public class ExperimentSystem : MonoBehaviour
 
     string GetGazeDataFile()
     {
-        return null;
+        return SaveData.LastFileName;
     }
 
     void DisableInputs()
@@ -228,7 +229,31 @@ public class ExperimentSystem : MonoBehaviour
 
     void FinishExperiment()
     {
-
+        var fileSettings = new XmlWriterSettings();
+        fileSettings.Indent = true;
+        var fileName = string.Format("experiment_{0}.xml", System.DateTime.Now.ToString("yyyyMMddTHHmmss"));
+        var file = XmlWriter.Create(System.IO.Path.Combine(_folder, fileName), fileSettings);
+        file.WriteStartDocument();
+        file.WriteStartElement("Experiments");
+        foreach (var e in ExperimentList)
+        {
+            var span = e.ResponseTime - e.StartTime;
+            file.WriteStartElement(string.Format("exp{0}", e.Number));
+            file.WriteAttributeString("Type", e.ExperimentType.ToString());
+            file.WriteAttributeString("ImageFile", e.ImageFile);
+            file.WriteAttributeString("CorrectAnswer", e.CorrectAnswer.ToString());
+            file.WriteAttributeString("StartTime", e.StartTime.Value.ToString("yyyyMMddTHHmmss"));
+            file.WriteAttributeString("ResponseTime", e.ResponseTime.Value.ToString("yyyyMMddTHHmmss"));
+            file.WriteAttributeString("TimeSpan", span.Value.TotalMilliseconds.ToString());
+            file.WriteAttributeString("Respondent", e.Respondent);
+            file.WriteAttributeString("Answer", e.Answer.ToString());
+            file.WriteAttributeString("GazeDataFile", e.GazeDataFile);
+            file.WriteEndElement();
+        }
+        file.WriteEndElement();
+        file.WriteEndDocument();
+        file.Flush();
+        file.Close();
     }
 }
 

@@ -23,17 +23,15 @@ namespace Assets.UDP
 
         public VideoMediaData(byte[] data)
         {
-            var jpg = new byte[data.Length - 1];
-            Array.Copy(data, 1, jpg, 0, jpg.Length);
-
+            var jpg = new ArraySegment<byte>(data, 1, data.Length - 1);
             Texture = new Texture2D(1, 1);
-            Texture.LoadImage(jpg);
+            Texture.LoadImage(jpg.ToArray());
         }
 
         public Color32[] GetPixels32(byte alpha)
         {
             var pixels = Texture.GetPixels32();
-            for(int i = 0; i < pixels.Length; i++)
+            for (int i = 0; i < pixels.Length; i++)
             {
                 pixels[i].a = alpha;
             }
@@ -44,14 +42,9 @@ namespace Assets.UDP
 
         public byte[] ToBytes()
         {
-            var jpg = Texture.EncodeToJPG(JPG_QUALITY);
-
-            var data = new byte[jpg.Length + 1];
-
-            data[0] = (byte)MediaCondition;
-            Array.Copy(jpg, 0, data, 1, jpg.Length);
-
-            return data;
+            var data = new List<byte> { (byte)MediaCondition };
+            data.AddRange(Texture.EncodeToJPG(JPG_QUALITY));
+            return data.ToArray();
         }
 
         public static void PrintColors(Color32[] colors, int length)
@@ -59,12 +52,12 @@ namespace Assets.UDP
             string str = "";
             for (int i = 0; i < length; i++)
             {
-                str += string.Format("({0},{1},{2},{3})", colors[i].r,colors[i].g, colors[i].b, colors[i].a);
+                str += string.Format("({0},{1},{2},{3})", colors[i].r, colors[i].g, colors[i].b, colors[i].a);
             }
             Debug.Log(str);
         }
 
-        public static void PrintBytes(byte[] bytes,int length)
+        public static void PrintBytes(byte[] bytes, int length)
         {
             string str = "";
             for (int i = 0; i < length; i++)
@@ -72,6 +65,11 @@ namespace Assets.UDP
                 str += bytes[i];
             }
             Debug.Log(str);
+        }
+
+        public void Dispose()
+        {
+            MonoBehaviour.Destroy(Texture);
         }
     }
 }

@@ -415,7 +415,6 @@ public class CommunicationMedia : MonoBehaviour
         {
             case MediaCondition.A:
                 var agentData = data as AgentMediaData;
-
                 Vector2 screenPos = new Vector2(texture.width/2, texture.height/2);
                 if (dataExchangeSystem.LatestGazeData != null)
                 {
@@ -489,6 +488,7 @@ public class CommunicationMedia : MonoBehaviour
                     case MediaCondition.N:
                         break;
                 }
+                mediaData?.Dispose();
             }
         }
 

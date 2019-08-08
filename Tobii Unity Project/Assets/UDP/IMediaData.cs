@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Assets.UDP
 {
-    public interface IMediaData
+    public interface IMediaData: IDisposable
     {
         MediaCondition MediaCondition { get; }
         byte[] ToBytes();

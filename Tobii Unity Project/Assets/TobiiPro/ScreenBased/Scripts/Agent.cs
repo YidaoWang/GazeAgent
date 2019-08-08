@@ -74,6 +74,7 @@ namespace DlibFaceLandmarkDetectorExample
             ResizeTexture(texture, r_width, r_height);
 
             faceLandmarkDetector.SetImage<Color32>(texture.GetPixels32(), r_width, r_height, 4, true);
+            MonoBehaviour.Destroy(texture);
 
             //detect face rects
             List<Rect> detectResult = faceLandmarkDetector.Detect();
