@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Timers;
+using Tobii.Research.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,7 @@ public class ExperimentSystem : MonoBehaviour
     public static List<Experiment> ExperimentList { get; set; }
     private UDPSystem UdpSystem;
     public GameObject Wall;
+    ScreenBasedSaveData SaveData;
 
     public int CurrentIndex { get; private set; }
 
@@ -38,6 +40,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         MainContext = SynchronizationContext.Current;
         Wall = GameObject.Find("Wall");
+        SaveData = GameObject.Find("[SaveData]").GetComponent<ScreenBasedSaveData>();
 
         var cs = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         cs.COnClick();
@@ -210,11 +213,13 @@ public class ExperimentSystem : MonoBehaviour
     void DisableInputs()
     {
         Wall.SetActive(true);
+        SaveData.SaveData = false;
     }
 
     void EnableInputs()
     {
         Wall.SetActive(false);
+        SaveData.SaveData = true;
     }
 
     void FinishExperiment()
