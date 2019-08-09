@@ -181,7 +181,7 @@ namespace Assets.UDP
 
             if (udpClientSend == null)
             {
-                udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(ScanIPAddr.IP[0]), GetSendHostPort()));
+                udpClientSend = new UdpClient(new IPEndPoint(IPAddress.Parse(localIP), GetSendHostPort()));
             }
             udpClientSend.EnableBroadcast = true;
             Socket uSocket = udpClientSend.Client;
