@@ -30,8 +30,10 @@ namespace DlibFaceLandmarkDetectorExample
         /// <summary>
         /// 
         /// </summary>
-        const float REDUCTION_RATE = 1 / 3.0f;
+        const float REDUCTION_RATE = 1 / 2.0f;
 
+        Vector2[] historicPoints = null;
+        private float FilterSmoothingFactor = 0.5f;
 
         public int Width { get; }
         public int Height { get; }
@@ -66,7 +68,7 @@ namespace DlibFaceLandmarkDetectorExample
         {
             int r_width = (int)(Width * REDUCTION_RATE);
             int r_height = (int)(Height * REDUCTION_RATE);
-          
+
             var texture = new Texture2D(Width, Height);
             texture.SetPixels32(colors);
             texture.Apply();
@@ -87,7 +89,7 @@ namespace DlibFaceLandmarkDetectorExample
 
                 //detect landmark points
                 var res = faceLandmarkDetector.DetectLandmark(rect).ToArray();
-                for(int i = 0; i < res.Length; i++)
+                for (int i = 0; i < res.Length; i++)
                 {
                     res[i] /= REDUCTION_RATE;
                 }
@@ -118,6 +120,8 @@ namespace DlibFaceLandmarkDetectorExample
         public void DrawAgent(Texture2D texture, Vector2[] landmarkPoints, Vector2 gazePoint)
         {
             if (landmarkPoints == null || landmarkPoints.Length < 67) return;
+
+            landmarkPoints = Smoothify(landmarkPoints);
 
             var colors = new Color32[Width * Height];
             //int thickness = 3;
@@ -171,10 +175,14 @@ namespace DlibFaceLandmarkDetectorExample
                 DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
             // 眉
-            //for (var i = 17; i < 26; i++)
-            //{
-            //    DrawLine(colors, width, height, landmarkPoints[i], landmarkPoints[i + 1], color);
-            //}
+            for (var i = 17; i < 21; i++)
+            {
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            }
+            for (var i = 22; i < 26; i++)
+            {
+                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            }
             // 鼻
             for (var i = 27; i < 35; i++)
             {
@@ -198,6 +206,30 @@ namespace DlibFaceLandmarkDetectorExample
 
             texture.SetPixels32(colors);
             texture.Apply(false);
+        }
+
+
+        private Vector2[] Smoothify(Vector2[] points)
+        {
+            if (historicPoints == null)
+            {
+                historicPoints = points;
+                return points;
+            }
+            var smoothedPoints = new Vector2[points.Length];
+            for (int i = 0; i < points.Length; i++)
+            {
+                //if ((historicPoints[i] - points[i]).magnitude < 5)
+                //{
+                //    points[i] = historicPoints[i];
+                //}
+                smoothedPoints[i] = new Vector3(
+                points[i].x * (1.0f - FilterSmoothingFactor) + historicPoints[i].x * FilterSmoothingFactor,
+                points[i].y * (1.0f - FilterSmoothingFactor) + historicPoints[i].y * FilterSmoothingFactor);
+
+            }
+            historicPoints = points;
+            return smoothedPoints;
         }
 
         private int PointToSequence(Vector2 point, int width, int heigth, bool flip)
