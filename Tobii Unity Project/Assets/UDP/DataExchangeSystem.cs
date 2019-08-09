@@ -26,7 +26,6 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
         void Start()
         {
             MainContext = SynchronizationContext.Current;
-            RemoteFlg = false;
             if (ExperimentSettings.RemoteFlg)
             {
                 UdpSystem = ExperimentSettings.GetDataUDP(Receive);

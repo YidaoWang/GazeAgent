@@ -477,6 +477,10 @@ public class CommunicationMedia : MonoBehaviour
                 switch (ConditionSettings.MediaCondition)
                 {
                     case MediaCondition.A:
+                        if (agent == null)
+                        {
+                            agent = new Agent(texture.width, texture.height);
+                        }
                         var landmarks = agent.GetLandmarkPoints(colors);
                         mediaData = new AgentMediaData(landmarks);
                         dataExchangeSystem.Post(mediaData);

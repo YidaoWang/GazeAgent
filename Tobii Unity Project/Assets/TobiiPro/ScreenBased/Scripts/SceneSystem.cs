@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Timers;
+using Tobii.Research;
+using Tobii.Research.Unity;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -85,6 +87,12 @@ public class SceneSystem : MonoBehaviour
 #elif UNITY_STANDALONE
     UnityEngine.Application.Quit();
 #endif
+    }
+
+    private void OnApplicationQuit()
+    {
+        EyeTracker.Instance.SubscribeToUserPositionGuide = false;
+        EyeTrackingOperations.Terminate();
     }
 
     bool LoadConnection()
