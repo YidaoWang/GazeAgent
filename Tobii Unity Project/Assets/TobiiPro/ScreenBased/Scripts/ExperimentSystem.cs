@@ -32,7 +32,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         get
         {
-            if (CurrentIndex >= ExperimentList.Count) return null;
+            if (ExperimentList == null || CurrentIndex >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex];
         }
     }
@@ -40,7 +40,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         get
         {
-            if (CurrentIndex + 1 >= ExperimentList.Count) return null;
+            if (ExperimentList == null || CurrentIndex + 1 >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex + 1];
         }
     }
@@ -57,7 +57,7 @@ public class ExperimentSystem : MonoBehaviour
         DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
         ConditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         Time = GameObject.Find("Time").GetComponent<Text>();
-        ConditionSettings.FCOnClick();
+        ConditionSettings.FCOnClick();       
 
         var timer = new System.Timers.Timer(100);
         timer.Elapsed += (sender, e) =>
