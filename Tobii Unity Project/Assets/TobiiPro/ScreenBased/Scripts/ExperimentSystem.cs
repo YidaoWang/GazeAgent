@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Timers;
 using System.Xml;
+using Tobii.Research;
 using Tobii.Research.Unity;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -23,15 +24,15 @@ public class ExperimentSystem : MonoBehaviour
     CenterCircle CenterCircle;
     DataExchangeSystem DataExchangeSystem;
     private ConditionSettings ConditionSettings;
+    Text Time;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
-    private System.Timers.Timer Timer;
 
     public Experiment CurrentExperiment
     {
         get
         {
-            if (CurrentIndex >= ExperimentList.Count) return null;
+            if (ExperimentList == null || CurrentIndex >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex];
         }
     }
@@ -39,7 +40,7 @@ public class ExperimentSystem : MonoBehaviour
     {
         get
         {
-            if (CurrentIndex + 1 >= ExperimentList.Count) return null;
+            if (ExperimentList == null || CurrentIndex + 1 >= ExperimentList.Count) return null;
             return ExperimentList[CurrentIndex + 1];
         }
     }
@@ -55,8 +56,31 @@ public class ExperimentSystem : MonoBehaviour
         CenterCircle = GameObject.Find("Circle").GetComponent<CenterCircle>();
         DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
         ConditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
-        ConditionSettings.FCOnClick();
+        Time = GameObject.Find("Time").GetComponent<Text>();
+        ConditionSettings.FCOnClick();       
+
+        var timer = new System.Timers.Timer(100);
+        timer.Elapsed += (sender, e) =>
+        {
+            MainContext.Post(_ =>
+            {
+                if (CurrentExperiment?.StartTime != null)
+                {
+                    var time = (DateTime.Now - CurrentExperiment.StartTime).Value.TotalSeconds;
+                    if (time < 0)
+                    {
+                        Time.text = "お待ちください。";
+                    }
+                    else
+                    {
+                        Time.text = time.ToString("F1");
+                    }
+                }
+            }, null);
+        };
+        timer.Start();
     }
+
 
     public void Connect()
     {
@@ -82,6 +106,7 @@ public class ExperimentSystem : MonoBehaviour
 
     void ConnectAsServer()
     {
+        var timer = new System.Timers.Timer(1000);
         UdpSystem = ExperimentSettings.GetCommandUDP(data =>
         {
             Debug.Log("COMMAND RECEIVED AT " + nameof(ConnectAsServer));
@@ -89,20 +114,18 @@ public class ExperimentSystem : MonoBehaviour
             var res = new TextCommand(data);
             if (res.Text == ExperimentSettings.RemoteAdress + "SETTING RECEIVED")
             {
-                Timer?.Stop();
+                timer?.Stop();
                 UdpSystem.Finish();
                 StartFromFirstExperiment();
             }
         });
         UdpSystem.Receive();
-
         var setting = new SettingCommand(ExperimentList);
-        Timer = new System.Timers.Timer(1000);
-        Timer.Elapsed += (sender, e) =>
+        timer.Elapsed += (sender, e) =>
         {
             UdpSystem.Send_NonAsync2(setting.ToBytes());
         };
-        Timer.Start();
+        timer.Start();
     }
 
     void ConnectAsClient()
@@ -123,7 +146,10 @@ public class ExperimentSystem : MonoBehaviour
 
     public void StartFromFirstExperiment()
     {
-        ConditionSettings.NOnClick();
+        MainContext.Post(_ =>
+        {
+            ConditionSettings.NOnClick();
+        }, null);
         if (ExperimentSettings.RemoteFlg)
         {
             DataExchangeSystem.RemoteFlg = true;
@@ -131,7 +157,7 @@ public class ExperimentSystem : MonoBehaviour
             UdpSystem.Receive();
             if (ExperimentSettings.ServerFlg)
             {
-                Thread.Sleep(3000);
+                Thread.Sleep(1000);
                 var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
                 CurrentExperiment.StartTime = nextStartTime;
                 var nextCmd = new NextCommand(-1, false, string.Empty, nextStartTime);
@@ -169,7 +195,10 @@ public class ExperimentSystem : MonoBehaviour
                         {
                             DisableInputs();
                         }, null);
-                        NextExperiment.StartTime = next.NextStartTime;
+                        if (NextExperiment != null)
+                        {
+                            NextExperiment.StartTime = next.NextStartTime;
+                        }
                         Next(ExperimentSettings.RemoteAdress, next.Answer, GetGazeDataFile());
                     }
                     // 自分が先に押した場合
@@ -212,7 +241,7 @@ public class ExperimentSystem : MonoBehaviour
 
         var texture = FileManager.LoadPNG(Application.dataPath + "/StreamingAssets/" + CurrentExperiment.ImageFile);
         img.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-        
+
         switch (CurrentExperiment.ExperimentType)
         {
             case ExperimentType.P:
@@ -260,8 +289,8 @@ public class ExperimentSystem : MonoBehaviour
 
     public void OnClickFinish()
     {
-        UdpSystem.Finish();
-        DataExchangeSystem.UdpSystem.Finish();
+        EyeTracker.Instance.SubscribeToUserPositionGuide = false;
+        EyeTrackingOperations.Terminate();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #elif UNITY_STANDALONE
@@ -331,9 +360,29 @@ public class ExperimentSystem : MonoBehaviour
         var file = XmlWriter.Create(System.IO.Path.Combine(_folder, fileName), fileSettings);
         file.WriteStartDocument();
         file.WriteStartElement("Experiments");
+
+        var point = 0;
+        var ec = 0;
+        TimeSpan resTimeSum = new TimeSpan(0, 0, 0);
         foreach (var e in ExperimentList)
         {
             var span = e.ResponseTime - e.StartTime;
+            if (e.ExperimentType != ExperimentType.P)
+            {
+                ec++;
+                if (span != null)
+                {
+                    resTimeSum += span.Value;
+                }
+                else
+                {
+                    Debug.Log("Time Span Missed.");
+                }
+                if (e.Answer == e.CorrectAnswer)
+                {
+                    point++;
+                }
+            }
             file.WriteStartElement(string.Format("exp{0}", e.Number));
             file.WriteAttributeString("Type", e.ExperimentType.ToString());
             file.WriteAttributeString("ImageFile", e.ImageFile);
@@ -350,6 +399,9 @@ public class ExperimentSystem : MonoBehaviour
         file.WriteEndDocument();
         file.Flush();
         file.Close();
+
+        EndSceneSystem.CorrectRate = 100.0 * point / ec;
+        EndSceneSystem.MRespondedTime = resTimeSum.TotalSeconds / ec;
 
         SceneManager.UnloadSceneAsync(SceneManager.GetActiveScene());
         SceneManager.LoadScene("EndScene");

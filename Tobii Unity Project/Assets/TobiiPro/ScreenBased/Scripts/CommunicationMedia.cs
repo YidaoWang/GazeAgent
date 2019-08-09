@@ -38,7 +38,7 @@ public class CommunicationMedia : MonoBehaviour
     /// Set FPS of WebCamTexture.
     /// </summary>
     [SerializeField, TooltipAttribute("Set FPS of WebCamTexture.")]
-    public int requestedFPS = 30;
+    public int requestedFPS = 10;
 
     /// <summary>
     /// Set whether to use the front facing camera.
@@ -259,8 +259,6 @@ public class CommunicationMedia : MonoBehaviour
         // Starts the camera
         webCamTexture.Play();
 
-        agent = new Agent(webCamTexture.width, webCamTexture.height);
-
         while (true)
         {
             //If you want to use webcamTexture.width and webcamTexture.height on iOS, you have to wait until webcamTexture.didUpdateThisFrame == 1, otherwise these two values will be equal to 16. (http://forum.unity3d.com/threads/webcamtexture-and-error-0x0502.123922/)
@@ -324,10 +322,10 @@ public class CommunicationMedia : MonoBehaviour
     /// </summary>
     private void OnInited()
     {
-        if (colors == null || colors.Length != webCamTexture.width * webCamTexture.height)
+        if (colors == null || colors.Length != requestedWidth * requestedHeight)
         {
-            colors = new Color32[webCamTexture.width * webCamTexture.height];
-            rotatedColors = new Color32[webCamTexture.width * webCamTexture.height];
+            colors = new Color32[requestedWidth * requestedHeight];
+            rotatedColors = new Color32[requestedWidth * requestedHeight];
         }
 
         if (adjustPixelsDirection)
@@ -342,12 +340,14 @@ public class CommunicationMedia : MonoBehaviour
         }
         if (rotate90Degree)
         {
-            texture = new Texture2D(webCamTexture.height, webCamTexture.width, TextureFormat.RGBA32, false);
+            texture = new Texture2D(requestedHeight, requestedWidth, TextureFormat.RGBA32, false);
         }
         else
         {
-            texture = new Texture2D(webCamTexture.width, webCamTexture.height, TextureFormat.RGBA32, false);
+            texture = new Texture2D(requestedWidth, requestedHeight, TextureFormat.RGBA32, false);
         }
+
+        agent = new Agent(texture.width, texture.height);
 
         gameObject.GetComponent<Renderer>().material.mainTexture = texture;
 
@@ -477,6 +477,10 @@ public class CommunicationMedia : MonoBehaviour
                 switch (ConditionSettings.MediaCondition)
                 {
                     case MediaCondition.A:
+                        if (agent == null)
+                        {
+                            agent = new Agent(texture.width, texture.height);
+                        }
                         var landmarks = agent.GetLandmarkPoints(colors);
                         mediaData = new AgentMediaData(landmarks);
                         dataExchangeSystem.Post(mediaData);
@@ -533,25 +537,28 @@ public class CommunicationMedia : MonoBehaviour
     /// </summary>
     private Color32[] GetColors()
     {
-        webCamTexture.GetPixels32(colors);
+        colors = TextureScale.Bilinear(webCamTexture.GetPixels32(), webCamTexture.width, webCamTexture.height, requestedWidth, requestedHeight);
 
         if (adjustPixelsDirection)
         {
             //Adjust an array of color pixels according to screen orientation and WebCamDevice parameter.
             if (rotate90Degree)
             {
-                Rotate90CW(colors, rotatedColors, webCamTexture.width, webCamTexture.height);
-                FlipColors(rotatedColors, webCamTexture.width, webCamTexture.height);
+                Rotate90CW(colors, rotatedColors, requestedWidth, requestedHeight);
+                FlipColors(rotatedColors, requestedWidth, requestedHeight);
                 return rotatedColors;
             }
             else
             {
-                FlipColors(colors, webCamTexture.width, webCamTexture.height);
+                FlipColors(colors, requestedWidth, requestedHeight);
                 return colors;
             }
         }
         return colors;
     }
+
+
+
 
     /// <summary>
     /// Raises the destroy event.

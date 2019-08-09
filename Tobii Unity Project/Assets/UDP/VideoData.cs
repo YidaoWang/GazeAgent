@@ -12,7 +12,7 @@ namespace Assets.UDP
     {
         public MediaCondition MediaCondition => MediaCondition.F;
 
-        const int JPG_QUALITY = 20;
+        const int JPG_QUALITY = 40;
 
         public VideoMediaData(Color32[] colors, int width, int height)
         {

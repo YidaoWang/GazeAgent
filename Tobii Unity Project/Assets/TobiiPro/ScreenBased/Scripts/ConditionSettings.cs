@@ -23,7 +23,6 @@ public class ConditionSettings : MonoBehaviour
 
     void Start()
     {
-        AOnClick();
     }
 
     public void AOnClick()
@@ -58,6 +57,7 @@ public class ConditionSettings : MonoBehaviour
 
     void ChangeCondition(MediaCondition mediaCondition, CursorCondition cursorCondition)
     {
+        Debug.Log("Condition Changed:" + mediaCondition.ToString() + " + " + cursorCondition.ToString());
         MediaCondition = mediaCondition;
         CursorCondition = CursorCondition;
         OnConditionChange?.Invoke(mediaCondition, cursorCondition);
