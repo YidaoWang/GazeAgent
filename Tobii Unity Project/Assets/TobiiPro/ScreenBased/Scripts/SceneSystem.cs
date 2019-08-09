@@ -64,7 +64,6 @@ public class SceneSystem : MonoBehaviour
         if (LoadConnection() && LoadExperiment())
         {
             SetExperimentList();
-            ExperimentSettings.RemoteFlg = true;
             ExperimentSettings.ServerFlg = true;
             SceneManager.LoadScene("MainScene");
         }
@@ -72,9 +71,11 @@ public class SceneSystem : MonoBehaviour
 
     public void StartAsClient()
     {
-        LoadConnection();
-        ExperimentSettings.RemoteFlg = true;
-        SceneManager.LoadScene("MainScene");
+        if (LoadConnection())
+        {
+            Debug.Log(ExperimentSettings.RemoteFlg);
+            SceneManager.LoadScene("MainScene");
+        }
     }
 
     public void OnClickFinish()
