@@ -26,14 +26,15 @@ public class Experiment
     public string GazeDataFile { get; set; }
     public bool CorrectAnswer { get; set; }
     public bool Answer { get; set; }
+    public bool IsPractice { get; set; }
 
-    public Experiment(ExperimentType experimentType, int number, string imagePath, bool correctAnswer)
+    public Experiment(ExperimentType experimentType, int number, string imagePath, bool correctAnswer, bool isPractice = false)
     {
         ExperimentType = experimentType;
         Number = number;
         ImageFile = imagePath;
         CorrectAnswer = correctAnswer;
-
+        IsPractice = isPractice;
     }
 
     public void Start()

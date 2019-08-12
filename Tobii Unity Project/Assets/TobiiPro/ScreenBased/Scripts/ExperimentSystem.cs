@@ -244,9 +244,6 @@ public class ExperimentSystem : MonoBehaviour
 
         switch (CurrentExperiment.ExperimentType)
         {
-            case ExperimentType.P:
-                ConditionSettings.COnClick();
-                break;
             case ExperimentType.A:
                 ConditionSettings.AOnClick();
                 break;
@@ -367,7 +364,7 @@ public class ExperimentSystem : MonoBehaviour
         foreach (var e in ExperimentList)
         {
             var span = e.ResponseTime - e.StartTime;
-            if (e.ExperimentType != ExperimentType.P)
+            if (!e.IsPractice)
             {
                 ec++;
                 if (span != null)

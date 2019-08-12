@@ -16,7 +16,7 @@ public class EndSceneSystem : MonoBehaviour
     void Start()
     {
         var cr = GameObject.Find("CorrectRate").GetComponent<Text>();
-        cr.text = "正答率:  " + CorrectRate.ToString("F2") + " ％";
+        cr.text = "正答率:  " + CorrectRate.ToString("F1") + " ％";
         var mrt = GameObject.Find("RespondTime").GetComponent<Text>();
         mrt.text = "平均回答時間:  " + MRespondedTime.ToString("F2") + " 秒";
     }

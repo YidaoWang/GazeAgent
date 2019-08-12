@@ -17,6 +17,8 @@ public class SceneSystem : MonoBehaviour
     private int[] ExperimentOrder;
     private int RepeatNumber;
 
+    int PracticeNumber = 10;
+
     public SynchronizationContext MainContext { get; private set; }
 
     // Start is called before the first frame update
@@ -35,8 +37,8 @@ public class SceneSystem : MonoBehaviour
         var remoteIP = GameObject.Find("RemoteIP").GetComponent<InputField>();
 
         remoteIP.text = "136.187.82.0";
-        repeatNumber.text = "5";
-        experimentOrder.text = "123456";
+        repeatNumber.text = "30";
+        experimentOrder.text = "1";
 
         Application.quitting += OnQuit;
     }
@@ -123,8 +125,8 @@ public class SceneSystem : MonoBehaviour
         }
         else
         {
-            ExperimentOrder = new int[6];
-            for (int i = 0; i < 6; i++)
+            ExperimentOrder = new int[experimentOrder.Length];
+            for (int i = 0; i < experimentOrder.Length; i++)
             {
                 ExperimentOrder[i] = experimentOrder[i] - '0';
             }
@@ -136,36 +138,42 @@ public class SceneSystem : MonoBehaviour
     void SetExperimentList()
     {
         var experimentList = new List<Experiment>();
-        var imgs = new int[4];
         System.Random r = new System.Random();
 
         foreach (ExperimentType et in ExperimentOrder)
         {
             print(et);
-            for (var i = 0; i < RepeatNumber; i++)
+            for (var i = 0; i < PracticeNumber + RepeatNumber; i++)
             {
                 var rand = r.Next(4);
+                var rand2 = r.Next(99);
                 var imgPath = "/images";
                 var ca = false;
                 switch (rand)
                 {
                     case 0:
-                        imgPath += "/35/T/" + imgs[rand] + ".png";
+                        imgPath += "/35/T/" + rand2 + ".png";
                         ca = true;
                         break;
                     case 1:
-                        imgPath += "/35/F/" + imgs[rand] + ".png";
+                        imgPath += "/35/F/" + rand2 + ".png";
                         break;
                     case 2:
-                        imgPath += "/21/T/" + imgs[rand] + ".png";
+                        imgPath += "/21/T/" + rand2 + ".png";
                         ca = true;
                         break;
                     case 3:
-                        imgPath += "/21/F/" + imgs[rand] + ".png";
+                        imgPath += "/21/F/" + rand2 + ".png";
                         break;
                 }
-                imgs[rand]++;
-                experimentList.Add(new Experiment(et, i, imgPath, ca));
+                if (i < PracticeNumber)
+                {
+                    experimentList.Add(new Experiment(et, i, imgPath, ca, true));
+                }
+                else
+                {
+                    experimentList.Add(new Experiment(et, i, imgPath, ca));
+                }
             }
         }
 

@@ -33,9 +33,10 @@ namespace Assets.UDP
                 {
                     var type = (ExperimentType)reader.ReadByte();
                     var num = reader.ReadInt32();
+                    var isp = reader.ReadBoolean();
                     var imgPath = reader.ReadString();
                     var ca = reader.ReadBoolean();
-                    ExperimentList.Add(new Experiment(type, num, imgPath, ca));
+                    ExperimentList.Add(new Experiment(type, num, imgPath, ca, isp));
                 }
             }
         }
@@ -51,6 +52,7 @@ namespace Assets.UDP
                 {
                     writer.Write((byte)e.ExperimentType);
                     writer.Write(e.Number);
+                    writer.Write(e.IsPractice);
                     writer.Write(e.ImageFile);
                     writer.Write(e.CorrectAnswer);
                 }
