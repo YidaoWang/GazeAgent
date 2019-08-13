@@ -27,6 +27,7 @@ public class ExperimentSystem : MonoBehaviour
     Text Time;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
+    private System.Timers.Timer tickTimer;
 
     public Experiment CurrentExperiment
     {
@@ -59,8 +60,8 @@ public class ExperimentSystem : MonoBehaviour
         Time = GameObject.Find("Time").GetComponent<Text>();
         ConditionSettings.FCOnClick();       
 
-        var timer = new System.Timers.Timer(100);
-        timer.Elapsed += (sender, e) =>
+        tickTimer = new System.Timers.Timer(100);
+        tickTimer.Elapsed += (sender, e) =>
         {
             MainContext.Post(_ =>
             {
@@ -78,7 +79,7 @@ public class ExperimentSystem : MonoBehaviour
                 }
             }, null);
         };
-        timer.Start();
+        tickTimer.Start();
     }
 
 
@@ -158,7 +159,7 @@ public class ExperimentSystem : MonoBehaviour
             if (ExperimentSettings.ServerFlg)
             {
                 Thread.Sleep(1000);
-                var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
+                var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2500);
                 CurrentExperiment.StartTime = nextStartTime;
                 var nextCmd = new NextCommand(-1, false, string.Empty, nextStartTime);
                 UdpSystem.Send_NonAsync2(nextCmd.ToBytes());
@@ -167,7 +168,7 @@ public class ExperimentSystem : MonoBehaviour
         }
         else
         {
-            var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2000);
+            var nextStartTime = DateTime.Now + TimeSpan.FromMilliseconds(2500);
             CurrentExperiment.StartTime = nextStartTime;
             ScheduleStartExperiment();
         }
@@ -232,6 +233,13 @@ public class ExperimentSystem : MonoBehaviour
             };
             timer.Start();
         }
+        else
+        {
+            MainContext.Post(_ =>
+            {
+                StartExperiment();
+            }, null);
+        }
     }
 
     void StartExperiment()
@@ -286,6 +294,7 @@ public class ExperimentSystem : MonoBehaviour
 
     public void OnClickFinish()
     {
+        tickTimer?.Stop();
         EyeTracker.Instance.SubscribeToUserPositionGuide = false;
         EyeTrackingOperations.Terminate();
 #if UNITY_EDITOR
@@ -347,6 +356,8 @@ public class ExperimentSystem : MonoBehaviour
 
     void FinishExperiment()
     {
+        tickTimer?.Stop();
+
         UdpSystem?.Finish();
         DataExchangeSystem?.UdpSystem?.Finish();
         EyeTracker.Instance.StopAllCoroutines();
