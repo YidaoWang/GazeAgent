@@ -26,7 +26,6 @@ namespace Assets.UDP
 
         public NextCommand(byte[] data)
         {
-            Debug.Log(LogDisplay.ArrayToString(data));
             using (var stream = new MemoryStream(data))
             {
                 var reader = new BinaryReader(stream, Encoding.UTF8);
@@ -34,7 +33,6 @@ namespace Assets.UDP
                 LastExperimentNumber = reader.ReadInt32();
                 Answer = reader.ReadBoolean();
                 Respondent = reader.ReadString();
-                Debug.Log(Respondent);
                 NextStartTime = DateTime.FromBinary(reader.ReadInt64());
             }
         }

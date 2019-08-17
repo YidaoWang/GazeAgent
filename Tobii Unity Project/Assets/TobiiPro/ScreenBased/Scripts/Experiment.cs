@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 public enum ExperimentType
 {
-    P = 0,
     A = 1,
     AC = 2,
     F = 3,
