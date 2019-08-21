@@ -58,7 +58,7 @@ public class ExperimentSystem : MonoBehaviour
         DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
         ConditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         Time = GameObject.Find("Time").GetComponent<Text>();
-        ConditionSettings.FCOnClick();       
+        ConditionSettings.FCOnClick();
 
         tickTimer = new System.Timers.Timer(100);
         tickTimer.Elapsed += (sender, e) =>
@@ -186,27 +186,43 @@ public class ExperimentSystem : MonoBehaviour
                     CurrentExperiment.StartTime = next.NextStartTime;
                     ScheduleStartExperiment();
                 }
-                else
+                else if (next.LastExperimentNumber + 1 < ExperimentList.Count)
                 {
-                    // 相手が先に押した場合
                     var nextExp = ExperimentList[next.LastExperimentNumber + 1];
+                    // 相手が先に押した場合
                     if (nextExp.StartTime == null || nextExp.StartTime > next.NextStartTime)
                     {
                         MainContext.Post(_ =>
                         {
                             DisableInputs();
+                            if (NextExperiment != null)
+                            {
+                                NextExperiment.StartTime = next.NextStartTime;
+                            }
+                            Next(ExperimentSettings.RemoteAdress, next.Answer, GetGazeDataFile());
+
                         }, null);
-                        if (NextExperiment != null)
-                        {
-                            NextExperiment.StartTime = next.NextStartTime;
-                        }
-                        Next(ExperimentSettings.RemoteAdress, next.Answer, GetGazeDataFile());
                     }
                     // 自分が先に押した場合
                     else
                     {
                         // do nothing.
                     }
+                }
+                else
+                {
+                    MainContext.Post(_ =>
+                    {
+                        if (CurrentExperiment.ResponseTime == null)
+                        {
+                            DisableInputs();
+                            Next(ExperimentSettings.RemoteAdress, next.Answer, GetGazeDataFile());
+                        }
+                        else
+                        {
+                            // do nothing.
+                        }
+                    }, null);
                 }
                 break;
         }
@@ -326,6 +342,7 @@ public class ExperimentSystem : MonoBehaviour
 
     void Next(string respondent, bool answer, string dazedataFile)
     {
+        Debug.Log("Next");
         CurrentExperiment.Finish(respondent, answer, dazedataFile);
         CurrentIndex++;
         if (CurrentIndex >= ExperimentList.Count)
@@ -360,8 +377,7 @@ public class ExperimentSystem : MonoBehaviour
         tickTimer?.Stop();
 
         UdpSystem?.Finish();
-        DataExchangeSystem?.UdpSystem?.Finish();
-        EyeTracker.Instance.StopAllCoroutines();
+        DataExchangeSystem?.FinishUDP();
 
         var fileSettings = new XmlWriterSettings();
         fileSettings.Indent = true;
@@ -408,7 +424,6 @@ public class ExperimentSystem : MonoBehaviour
         file.WriteEndDocument();
         file.Flush();
         file.Close();
-
         EndSceneSystem.CorrectRate = 100.0 * point / ec;
         EndSceneSystem.MRespondedTime = resTimeSum.TotalSeconds / ec;
 

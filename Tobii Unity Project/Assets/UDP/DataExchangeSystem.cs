@@ -39,6 +39,7 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             {
                 UdpSystem.Finish();
             }
+            RemoteFlg = false;
         }
 
         public void Receive(byte[] data)
@@ -88,7 +89,7 @@ namespace Assets.TobiiPro.ScreenBased.Scripts
             }
             else
             {
-                UdpSystem.Send_NonAsync2(data.ToBytes());
+                UdpSystem?.Send_NonAsync2(data.ToBytes());
             }
         }
     }
