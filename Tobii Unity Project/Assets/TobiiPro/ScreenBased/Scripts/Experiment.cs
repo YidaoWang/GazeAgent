@@ -27,6 +27,26 @@ public class Experiment
     public bool CorrectAnswer { get; set; }
     public bool Answer { get; set; }
     public bool IsPractice { get; set; }
+    public TimeSpan TimeSpan { get; set; }
+    public int ObjectNumber
+    {
+        get
+        {
+            if(ImageFile != null)
+            {
+                return int.Parse(ImageFile.Substring(8, 2));
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+
+    public Experiment()
+    {
+
+    }
 
     public Experiment(ExperimentType experimentType, int number, string imagePath, bool correctAnswer, bool isPractice = false)
     {

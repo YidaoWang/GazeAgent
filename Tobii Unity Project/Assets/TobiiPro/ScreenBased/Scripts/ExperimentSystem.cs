@@ -220,6 +220,7 @@ public class ExperimentSystem : MonoBehaviour
             return;
         }
         TimeSpan interval = CurrentExperiment.StartTime.Value - DateTime.Now;
+        print(interval.TotalMilliseconds);
         if (interval > TimeSpan.Zero)
         {
             var timer = new System.Timers.Timer(interval.TotalMilliseconds);
