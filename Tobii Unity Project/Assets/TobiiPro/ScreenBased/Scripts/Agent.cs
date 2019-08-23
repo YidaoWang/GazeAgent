@@ -127,7 +127,7 @@ namespace DlibFaceLandmarkDetectorExample
             //int thickness = 3;
             int pupil = 10;
             Vector2 flipedGazePoint = new Vector2(gazePoint.x, Height - gazePoint.y);
-            Color32 color = new Color32(0, 0, 0, 255);
+            Color32 color = new Color32(0, 0, 255, 100);
 
             // ランドマークを中心へ移動
             //AdjustVectors(landmarkPoints, width, height, rect);
@@ -151,10 +151,10 @@ namespace DlibFaceLandmarkDetectorExample
             var lr = (landmarkPoints[39] - landmarkPoints[36]).magnitude / 2;
             var lcenter = landmarkPoints[36] + (landmarkPoints[39] - landmarkPoints[36]) / 2;
 
-            DrawCircle(colors, Width, Height, lcenter, lr + 5, color, true);
+            DrawCircle(colors, Width, Height, lcenter, lr + 10, color, true);
 
 
-            var ldel = (flipedGazePoint - lcenter) * (20.0f / 320);
+            var ldel = (flipedGazePoint - lcenter) * (30 / 300f);
             //ldel = new Vector2(Math.Min(ldel.x, 20), Math.Min(ldel.y, 20));
             DrawCircle(colors, Width, Height, lcenter + ldel, pupil, color, true, true);
 
@@ -162,9 +162,9 @@ namespace DlibFaceLandmarkDetectorExample
             var rr = (landmarkPoints[42] - landmarkPoints[45]).magnitude / 2;
             var rcenter = landmarkPoints[42] + (landmarkPoints[45] - landmarkPoints[42]) / 2;
 
-            DrawCircle(colors, Width, Height, rcenter, rr + 5, color, true);
+            DrawCircle(colors, Width, Height, rcenter, rr + 10, color, true);
 
-            var rdel = (flipedGazePoint - rcenter) * (20.0f / 320);
+            var rdel = (flipedGazePoint - rcenter) * (30 / 300f);
             //rdel = new Vector2(Math.Min(rdel.x, 20), Math.Min(rdel.y, 20));
             DrawCircle(colors, Width, Height, rcenter + rdel, pupil, color, true, true);
 
@@ -175,14 +175,14 @@ namespace DlibFaceLandmarkDetectorExample
                 DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
             }
             // 眉
-            for (var i = 17; i < 21; i++)
-            {
-                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
-            }
-            for (var i = 22; i < 26; i++)
-            {
-                DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
-            }
+            //for (var i = 17; i < 21; i++)
+            //{
+            //    DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            //}
+            //for (var i = 22; i < 26; i++)
+            //{
+            //    DrawLine(colors, Width, Height, landmarkPoints[i], landmarkPoints[i + 1], color);
+            //}
             // 鼻
             for (var i = 27; i < 35; i++)
             {

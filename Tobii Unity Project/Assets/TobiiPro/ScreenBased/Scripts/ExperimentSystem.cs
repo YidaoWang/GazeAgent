@@ -25,6 +25,7 @@ public class ExperimentSystem : MonoBehaviour
     DataExchangeSystem DataExchangeSystem;
     private ConditionSettings ConditionSettings;
     Text Time;
+    Text Message;
     string _folder = "Data";
     private XmlWriterSettings _fileSettings;
     private System.Timers.Timer tickTimer;
@@ -58,6 +59,7 @@ public class ExperimentSystem : MonoBehaviour
         DataExchangeSystem = GameObject.Find("DataExchangeSystem").GetComponent<DataExchangeSystem>();
         ConditionSettings = GameObject.Find("ConditionSettings").GetComponent<ConditionSettings>();
         Time = GameObject.Find("Time").GetComponent<Text>();
+        Message = GameObject.Find("Message").GetComponent<Text>();
         ConditionSettings.FCOnClick();
 
         tickTimer = new System.Timers.Timer(100);
@@ -70,11 +72,22 @@ public class ExperimentSystem : MonoBehaviour
                     var time = (DateTime.Now - CurrentExperiment.StartTime).Value.TotalSeconds;
                     if (time < 0)
                     {
-                        Time.text = "お待ちください。";
                     }
                     else
                     {
                         Time.text = time.ToString("F1");
+                        if (CurrentIndex < 9)
+                        {
+                            Message.text = string.Format("練習 {0}", CurrentIndex + 1);
+                        }
+                        else if (CurrentIndex == 9)
+                        {
+                            Message.text = "練習 10 ※次から本番です。";
+                        }
+                        else
+                        {
+                            Message.text = string.Format("タスク {0}", CurrentIndex - 9); ;
+                        }
                     }
                 }
             }, null);
@@ -305,6 +318,7 @@ public class ExperimentSystem : MonoBehaviour
 
     public void Back()
     {
+        tickTimer?.Stop();
         SceneManager.UnloadSceneAsync(SceneManager.GetActiveScene());
         SceneManager.LoadScene("StartScene");
     }
