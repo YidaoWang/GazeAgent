@@ -17,7 +17,7 @@ public class SceneSystem : MonoBehaviour
     private int[] ExperimentOrder;
     private int RepeatNumber;
 
-    int PracticeNumber = 10;
+    int PracticeNumber = 16;
 
     public SynchronizationContext MainContext { get; private set; }
 
@@ -36,8 +36,8 @@ public class SceneSystem : MonoBehaviour
         var experimentOrder = GameObject.Find("ExperimentOrder").GetComponent<InputField>();
         var remoteIP = GameObject.Find("RemoteIP").GetComponent<InputField>();
 
-        remoteIP.text = "136.187.82.0";
-        repeatNumber.text = "30";
+        remoteIP.text = "136.187.82.148";
+        repeatNumber.text = "80";
         experimentOrder.text = "1";
 
         Application.quitting += OnQuit;
@@ -137,46 +137,46 @@ public class SceneSystem : MonoBehaviour
 
     void SetExperimentList()
     {
+        var pexperimentList = new List<Experiment>();
         var experimentList = new List<Experiment>();
         System.Random r = new System.Random();
 
+        // 各問題の練習問題カウンタ
+        var pcounters = new int[] { 0, 0, 0, 0 };
+        // 各問題のカウンタ
+        var counters = new int[] { 0, 0, 0, 0 };
+        // 各問題の上限
+        var pmax = PracticeNumber / 4;
+        var max = RepeatNumber / 4;
+
         foreach (ExperimentType et in ExperimentOrder)
         {
-            print(et);
-            for (var i = 0; i < PracticeNumber + RepeatNumber; i++)
+            for (var i = 0; i < pmax; i++)
             {
-                var rand = r.Next(4);
-                var rand2 = r.Next(99);
-                var imgPath = "/images";
-                var ca = false;
-                switch (rand)
-                {
-                    case 0:
-                        imgPath += "/35/T/" + rand2 + ".png";
-                        ca = true;
-                        break;
-                    case 1:
-                        imgPath += "/35/F/" + rand2 + ".png";
-                        break;
-                    case 2:
-                        imgPath += "/21/T/" + rand2 + ".png";
-                        ca = true;
-                        break;
-                    case 3:
-                        imgPath += "/21/F/" + rand2 + ".png";
-                        break;
-                }
-                if (i < PracticeNumber)
-                {
-                    experimentList.Add(new Experiment(et, i, imgPath, ca, true));
-                }
-                else
-                {
-                    experimentList.Add(new Experiment(et, i, imgPath, ca));
-                }
+                pexperimentList.Add(new Experiment(et, i * 4, "/images/35/T/" + i + ".png", true, true));
+                pexperimentList.Add(new Experiment(et, i * 4 + 1, "/images/35/F/" + i + ".png", false, true));
+                pexperimentList.Add(new Experiment(et, i * 4 + 2, "/images/21/T/" + i + ".png", true, true));
+                pexperimentList.Add(new Experiment(et, i * 4 + 3, "/images/21/F/" + i + ".png", false, true));
             }
-        }
+            for (var i = pmax; i < pmax + max; i++)
+            {
+                experimentList.Add(new Experiment(et, i * 4, "/images/35/T/" + i + ".png", true, true));
+                experimentList.Add(new Experiment(et, i * 4 + 1, "/images/35/F/" + i + ".png", false, true));
+                experimentList.Add(new Experiment(et, i * 4 + 2, "/images/21/T/" + i + ".png", true, true));
+                experimentList.Add(new Experiment(et, i * 4 + 3, "/images/21/F/" + i + ".png", false, true));
+            }
 
-        ExperimentSystem.ExperimentList = experimentList;
+            // シャッフル
+            pexperimentList = pexperimentList.OrderBy(i => Guid.NewGuid()).ToList();
+            experimentList = experimentList.OrderBy(i => Guid.NewGuid()).ToList();
+            // 結合
+            pexperimentList.AddRange(experimentList);
+        }
+        foreach (var t in pexperimentList)
+        {
+            print(t.ImageFile);
+        }
+        ExperimentSystem.PracticeNumber = PracticeNumber;
+        ExperimentSystem.ExperimentList = pexperimentList;
     }
 }

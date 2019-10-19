@@ -15,6 +15,7 @@ using UnityEngine.UI;
 
 public class ExperimentSystem : MonoBehaviour
 {
+    public static int PracticeNumber;
     public static List<Experiment> ExperimentList { get; set; }
     public int CurrentIndex { get; private set; }
 
@@ -48,6 +49,7 @@ public class ExperimentSystem : MonoBehaviour
     }
 
     public SynchronizationContext MainContext { get; private set; }
+    
 
 
     void Start()
@@ -76,17 +78,17 @@ public class ExperimentSystem : MonoBehaviour
                     else
                     {
                         Time.text = time.ToString("F1");
-                        if (CurrentIndex < 9)
+                        if (CurrentIndex < PracticeNumber - 1)
                         {
                             Message.text = string.Format("練習 {0}", CurrentIndex + 1);
                         }
-                        else if (CurrentIndex == 9)
+                        else if (CurrentIndex == PracticeNumber - 1)
                         {
-                            Message.text = "練習 10 ※次から本番です。";
+                            Message.text = "練習 " + PracticeNumber + " ※次から本番です。";
                         }
                         else
                         {
-                            Message.text = string.Format("タスク {0}", CurrentIndex - 9); ;
+                            Message.text = string.Format("タスク {0}", CurrentIndex - PracticeNumber + 1); ;
                         }
                     }
                 }

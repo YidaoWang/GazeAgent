@@ -13,8 +13,8 @@ namespace XMLAnalytics
     {
         static void Main(string[] args)
         {
-            string folder1 = "Data/b1_1/";
-            string folder2 = "Data/b1_2/";
+            string folder1 = "Data/Data-b2-1/";
+            string folder2 = "Data/Data-b2-2/";
             var files1 = Directory.GetFiles(folder1);
             var files2 = Directory.GetFiles(folder2);
             var experimentList1 = getExperimentList(files1);
