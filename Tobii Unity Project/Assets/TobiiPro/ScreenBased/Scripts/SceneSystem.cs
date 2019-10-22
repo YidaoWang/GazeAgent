@@ -160,10 +160,10 @@ public class SceneSystem : MonoBehaviour
             }
             for (var i = pmax; i < pmax + max; i++)
             {
-                experimentList.Add(new Experiment(et, i * 4, "/images/35/T/" + i + ".png", true, true));
-                experimentList.Add(new Experiment(et, i * 4 + 1, "/images/35/F/" + i + ".png", false, true));
-                experimentList.Add(new Experiment(et, i * 4 + 2, "/images/21/T/" + i + ".png", true, true));
-                experimentList.Add(new Experiment(et, i * 4 + 3, "/images/21/F/" + i + ".png", false, true));
+                experimentList.Add(new Experiment(et, i * 4, "/images/35/T/" + i + ".png", true));
+                experimentList.Add(new Experiment(et, i * 4 + 1, "/images/35/F/" + i + ".png", false));
+                experimentList.Add(new Experiment(et, i * 4 + 2, "/images/21/T/" + i + ".png", true));
+                experimentList.Add(new Experiment(et, i * 4 + 3, "/images/21/F/" + i + ".png", false));
             }
 
             // シャッフル
